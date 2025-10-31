@@ -1,0 +1,27 @@
+# Puerto Rico Restaurant Matcher Requirements
+
+# Web scraping and API requests
+scrapy>=2.11.0
+zyte-api>=0.0.12
+aiohttp>=3.8.0
+
+# Data processing
+pandas>=2.0.0
+numpy>=1.24.0
+
+# String matching and fuzzy matching
+fuzzywuzzy>=0.18.0
+python-levenshtein>=0.21.0
+
+# OpenAI integration
+openai>=1.0.0
+
+# Configuration management
+python-dotenv>=1.0.0
+
+# Logging
+loguru>=0.7.0
+
+# Testing (optional)
+pytest>=7.4.0
+pytest-cov>=4.1.0

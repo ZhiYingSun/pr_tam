@@ -11,12 +11,17 @@ from aiohttp import ClientSession, ClientTimeout, BasicAuth
 logger = logging.getLogger(__name__)
 
 
+#Ganesh: I like that this is in it's own file
+# Why make one version a class and the other methods? 
+# Ganesh: let's clean it up to have one async version that is a class and is a singleton. That way no matter how many people instantiate it, we will be consistent
+
+
 async def post_request(
     api_key: str,
     url: str,
     request_body: dict[str, any],
     headers: dict[str, any] | None = None,
-) -> dict:
+) -> dict: # Ganesh: please type the response. 
     payload = {
         "url": url,
         "httpResponseBody": True,
@@ -29,6 +34,7 @@ async def post_request(
             {"name": k, "value": v} for k, v in headers.items()
         ]
 
+    # Ganesh: please add a rate limiter. We like: https://aiolimiter.readthedocs.io/en/stable/. Set the rate limit to 500/minute.
     async with ClientSession(timeout=ClientTimeout(total=60)) as session:
         async with session.post(
             "https://api.zyte.com/v1/extract",
@@ -79,7 +85,7 @@ class ZyteClient:
         headers: Optional[Dict[str, str]] = None,
     ) -> Dict[str, Any]:
         try:
-            return asyncio.run(post_request(self.api_key, url, request_body, headers))
+            return asyncio.run(post_request(self.api_key, url, request_body, headers)) # Ganesh: this is not great. It opens a new event loop for each request which is considered bad practice. to_thread is what you're looking for. 
         except Exception as e:
             logger.error(f"Zyte POST request failed: {e}")
             return {}

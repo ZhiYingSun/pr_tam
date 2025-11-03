@@ -9,7 +9,7 @@ from src.validators.openai_validator import OpenAIValidator, ValidationResult, c
 
 logger = logging.getLogger(__name__)
 
-
+# Ganesh: separate the OpenAI client and the validation pipeline. The OpenAI client should be a singleton and the validation pipeline should be a class.
 class ValidationPipeline:
     """Pipeline for validating matches using OpenAI."""
     

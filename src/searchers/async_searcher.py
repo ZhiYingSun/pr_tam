@@ -112,7 +112,8 @@ class AsyncIncorporationSearcher:
             logger.error(f"Error searching for business '{business_name}': {e}")
             return []
     
-    async def _make_zyte_request_async(self, payload: Dict, headers: Dict) -> Optional[Dict]:
+    # Ganesh: why do we have zyte code here and in zyte_client.py
+    async def _make_zyte_request_async(self, payload: Dict, headers: Dict) -> Optional[Dict]: # Ganesh: please type the funcs
         if not self.session:
             logger.error("Session not initialized. Cannot make request.")
             return None
@@ -145,11 +146,11 @@ class AsyncIncorporationSearcher:
                     logger.error(f"Failed to parse Zyte response as JSON: {json_error}")
                     return None
                 
-                if 'httpResponseBody' in data and data['httpResponseBody']:
+                if 'httpResponseBody' in data and data['httpResponseBody']: # ganesh: nit, cleaner way to do this with get('httpResponseBody', None)
                     try:
                         # Decode base64 response body
                         decoded_body = base64.b64decode(data['httpResponseBody']).decode('utf-8')
-                        body = json.loads(decoded_body)
+                        body = json.loads(decoded_body) # Ganesh: you want to create a pydantic model for the response and decode into that model, it will handle many of the errors you are trying to manually catch
                         return body
                     except (json.JSONDecodeError, base64.binascii.Error, UnicodeDecodeError) as decode_error:
                         logger.error(f"Failed to decode/parse httpResponseBody: {decode_error}")
@@ -183,7 +184,7 @@ class AsyncIncorporationSearcher:
             # Try each URL until one works
             for detail_url in urls_to_try:
                 logger.debug(f"Trying detail URL with registrationIndex: {detail_url}")
-                response = await self._make_zyte_get_request_async(detail_url, headers)
+                response = await self._make_zyte_get_request_async(detail_url, headers) # Ganesh: convert this into a pydnatic model to avoid the messiness of things like response['response']
                 logger.debug(f"Detail response type: {type(response)}, value: {response}")
                 
                 if response and isinstance(response, dict) and 'response' in response and response['response'] and 'corporation' in response['response']:
@@ -197,7 +198,7 @@ class AsyncIncorporationSearcher:
                 
         except Exception as e:
             logger.error(f"Error getting business details for entity {business_entity_id}: {e}")
-            return None
+            return None # Ganesh: across this code you surpress errors, try and be thoughtful about when to surpress vs. when to throw and when to catch. Surpression everywhere leads to bugs and confusion. But never surpressing often means that with things like scraping you can't ever complete the project (some small % always have issues)
     
     async def _make_zyte_get_request_async(self, url: str, headers: Dict) -> Optional[Dict]:
         if not self.session:
@@ -249,7 +250,7 @@ class AsyncIncorporationSearcher:
             logger.error(f"Zyte async GET request failed: {e}")
             return None
     
-    def _create_business_record_from_details(self, details: Dict) -> BusinessRecord:
+    def _create_business_record_from_details(self, details: Dict) -> BusinessRecord: # Ganesh: appreciate you returning a typed class here. Pydantic will help you do this more easily
         corporation = details.get('corporation', {})
         main_location = details.get('mainLocation', {})
         resident_agent = details.get('residentAgent', {})

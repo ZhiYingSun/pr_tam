@@ -22,7 +22,7 @@ class MatchingPipeline:
     def __init__(
         self,
         config: Optional[MatchingConfig] = None,
-        use_mock: bool = False
+        use_mock: bool = False # Ganesh: having mocks is great idea for testing but it shouldn't be exposed in production code. To fix this, pass in the IncorporationSearcher instead of the use_mock flag. Then you can pass in a mock or a real implementation. 
     ):
         self.config = config or MatchingConfig()
         self.use_mock = use_mock
@@ -30,7 +30,7 @@ class MatchingPipeline:
         if use_mock:
             logger.info("Using mock searcher for testing")
         else:
-            zyte_api_key = os.getenv('ZYTE_API_KEY')
+            zyte_api_key = os.getenv('ZYTE_API_KEY') # Ganesh: extract this to a higher level. That way if you are missing keys you can fail early. 
             if not zyte_api_key:
                 raise ValueError("ZYTE_API_KEY environment variable not set")
             logger.info("Using Zyte API searcher")
@@ -74,6 +74,7 @@ class MatchingPipeline:
                 limit=limit
             )
     
+    # Ganesh: the overhead to keep a sync and async version is not worth it. We should only keep one (and in this case you need async for speed).
     def _run_sync(
         self,
         input_csv: str,
@@ -94,7 +95,7 @@ class MatchingPipeline:
             
             # Step 1: Load restaurants
             logger.info("Loading restaurants...")
-            restaurants = load_restaurants(input_csv, limit=limit)
+            restaurants = load_restaurants(input_csv, limit=limit) # Ganesh: this is hard to test because it runs 'live'. In a test, you'll want to inject the restaurants as a dependency or pass in a loader function. That way you can sub them out when testing. 
             logger.info(f"Loaded {len(restaurants)} restaurants")
             
             # Step 2: Get data summary
@@ -132,7 +133,7 @@ class MatchingPipeline:
                     logger.info(f"Batch completed: {batch_matched}/{len(batch_results)} matched")
                     
                 except Exception as e:
-                    logger.error(f"Error processing batch {batch_num}: {e}")
+                    logger.error(f"Error processing batch {batch_num}: {e}") # Ganesh: right now if every batch errors, you will surpress the errors and continue. You'll return success: True
             
             logger.info(f"Completed processing {len(restaurants)} restaurants")
             
@@ -165,6 +166,8 @@ class MatchingPipeline:
                 'duration': datetime.now() - start_time
             }
     
+    # Ganesh: code is easier to reason about when it processes a single restaurant at a time. It's easier to debug and understand.
+    # To continue to get the speed benefits of batching, you can run an async loop at the root of your program
     async def _run_async(
         self,
         input_csv: str,
@@ -172,7 +175,7 @@ class MatchingPipeline:
         batch_size: int,
         limit: Optional[int],
         max_concurrent: int
-    ) -> Dict:
+    ) -> Dict: # return a typed class so that it's clear is being returned; this will force you to have the same structure for success and failure (or to chose to throw for a failure)
         """Run asynchronous matching pipeline."""
         start_time = datetime.now()
         

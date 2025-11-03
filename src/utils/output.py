@@ -262,7 +262,7 @@ def generate_all_outputs(matches: List[MatchResult], output_dir: str = "data/out
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     
     # File paths
-    matched_csv = output_path / f"matched_restaurants_{timestamp}.csv"
+    matched_csv = output_path / f"matched_restaurants_{timestamp}.csv" #ganesh: good call putting in timestamps so that they don't overwrite each other.
     unmatched_csv = output_path / f"unmatched_restaurants_{timestamp}.csv"
     summary_report = output_path / f"summary_report_{timestamp}.txt"
     

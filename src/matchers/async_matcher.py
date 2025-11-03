@@ -122,7 +122,7 @@ class AsyncRestaurantMatcher:
         """
         Searches for the best matching business record for a given restaurant asynchronously.
         """
-        async with self.semaphore:  # the context manager will release slot if exception occurs
+        async with self.semaphore:  # the context manager will release slot if exception occurs -> Ganesh: can you explain this?
             search_query = self._normalize_name(restaurant.name)
             candidates = await self.incorporation_searcher.search_business_async(
                 search_query,
@@ -191,6 +191,7 @@ class AsyncRestaurantMatcher:
         logger.info(f"Starting async matching for {len(restaurants)} restaurants with max_concurrent={self.max_concurrent}")
         
         # Create tasks for all restaurants
+        # Ganesh: I really like that you did an async gather here and the code is written to run on a single restaurant. Makes it much simpler
         tasks = [self.find_best_match_async(restaurant) for restaurant in restaurants]
         
         # Execute all tasks concurrently with exception handling
@@ -203,7 +204,7 @@ class AsyncRestaurantMatcher:
         for i, result in enumerate(results):
             if isinstance(result, Exception):
                 logger.error(f"Error matching restaurant '{restaurants[i].name}': {result}")
-                error_count += 1
+                error_count += 1 # Ganesh: this is great, but you need to bubble up the errors to the caller below this :)
             elif result is not None:
                 matched_results.append(result)
             # Note: result can be None if there was an error, but we now always return MatchResult

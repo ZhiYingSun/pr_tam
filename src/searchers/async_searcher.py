@@ -145,7 +145,7 @@ class AsyncIncorporationSearcher:
                     logger.error(f"Failed to parse Zyte response as JSON: {json_error}")
                     return None
                 
-                if 'httpResponseBody' in data and data['httpResponseBody']:
+                if data.get('httpResponseBody', None):
                     try:
                         # Decode base64 response body
                         decoded_body = base64.b64decode(data['httpResponseBody']).decode('utf-8')

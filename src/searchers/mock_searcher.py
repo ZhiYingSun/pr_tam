@@ -22,10 +22,9 @@ class MockIncorporationSearcher:
             mock_record = BusinessRecord(
                 legal_name=f"{business_name} Corp {i+1}",
                 registration_number=f"12345{i+1}",
-                street_address=f"{100+i} Main St",
-                city="San Juan",
-                postal_code="00908",
+                registration_index=f"12345{i+1}-111",
                 status="ACTIVE",
+                business_address=f"{100+i} Main St, San Juan, 00908",
                 resident_agent_name=f"Agent {i+1}",
                 resident_agent_address=f"{200+i} Agent St"
             )
@@ -38,10 +37,9 @@ class MockIncorporationSearcher:
         return BusinessRecord(
             legal_name=f"Mock Business {registry_number}",
             registration_number=registry_number,
-            street_address="123 Mock Street",
-            city="San Juan",
-            postal_code="00908",
+            registration_index=f"{registry_number}-111",
             status="ACTIVE",
+            business_address="123 Mock Street, San Juan, 00908",
             resident_agent_name="Mock Agent",
             resident_agent_address="456 Agent Avenue"
         )

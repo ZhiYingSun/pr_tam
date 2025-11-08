@@ -108,13 +108,14 @@ class AsyncIncorporationSearcher:
         try:
             logger.debug(f"Making async request through Zyte")
 
-            decoded_body = await self.zyte_client.post_request(
+            zyte_response = await self.zyte_client.post_request(
                 url=self.search_url,
                 request_body=payload,
                 headers=headers
             )
 
             try:
+                decoded_body = zyte_response.decode_body()
                 search_response = CorporationSearchResponse(**decoded_body)
                 return search_response
             except ValidationError as e:
@@ -158,14 +159,15 @@ class AsyncIncorporationSearcher:
         try:
             logger.debug(f"Making async GET request through Zyte to {url}")
 
-            decoded_body = await self.zyte_client.get_request(
+            zyte_response = await self.zyte_client.get_request(
                 url=url,
                 headers=headers
             )
 
             try:
-                pr_response = CorporationDetailResponse(**decoded_body)
-                return pr_response
+                decoded_body = zyte_response.decode_body()
+                corporation_detail = CorporationDetailResponse(**decoded_body)
+                return corporation_detail
             except ValidationError as e:
                 logger.error(f"Failed to parse PR detail response: {e}")
                 return None

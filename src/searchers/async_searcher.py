@@ -6,17 +6,15 @@ import logging
 import asyncio
 import re
 from typing import Dict, List, Any, Optional
-import aiohttp
-from aiohttp import ClientSession, ClientTimeout, BasicAuth
 
 from src.data.models import (
     BusinessRecord,
-    ZyteHttpResponse,
     CorporationSearchResponse,
     CorporationDetailResponse,
     CorporationDetailResponseData,
     CorporationSearchRecord,
 )
+from src.searchers.zyte_client import ZyteClient
 from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
@@ -27,30 +25,17 @@ class AsyncIncorporationSearcher:
     def __init__(self, zyte_api_key: str, max_concurrent: int = 20):
         self.zyte_api_key = zyte_api_key
         self.max_concurrent = max_concurrent
-        self.session = None
-
+        self.zyte_client = ZyteClient(zyte_api_key)
         self.search_url = "https://rceapi.estado.pr.gov/api/corporation/search"
         
     async def __aenter__(self):
-        """Async context manager entry - create session with connection pooling."""
-        connector = aiohttp.TCPConnector(
-            limit=100,  # Total connection pool size
-            limit_per_host=20,  # Max connections per host
-            ttl_dns_cache=300,  # DNS cache TTL
-            use_dns_cache=True,
-        )
-        timeout = ClientTimeout(total=30, connect=10)
-        self.session = ClientSession(
-            connector=connector, 
-            timeout=timeout,
-            auth=BasicAuth(self.zyte_api_key, "")
-        )
+        """Async context manager entry - initialize ZyteClient."""
+        await self.zyte_client.__aenter__()
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit - close session."""
-        if self.session:
-            await self.session.close()
+        """Async context manager exit - ZyteClient manages its own session lifecycle."""
+        pass
     
     async def search_business_async(self, business_name: str, limit: int = 5) -> List[BusinessRecord]:
         """Search for business by name using reverse engineered PR incorporation API."""
@@ -120,49 +105,20 @@ class AsyncIncorporationSearcher:
             return []
     
     async def _make_corporation_search_request_async(self, payload: Dict, headers: Dict) -> Optional[CorporationSearchResponse]:
-        if not self.session:
-            logger.error("Session not initialized. Cannot make request.")
-            return None
-        
         try:
             logger.debug(f"Making async request through Zyte")
-            
-            # Prepare Zyte payload
-            zyte_payload = {
-                "url": self.search_url,
-                "httpResponseBody": True,
-                "httpRequestMethod": "POST",
-                "httpRequestText": json.dumps(payload),
-                "customHttpRequestHeaders": [
-                    {"name": k, "value": v} for k, v in headers.items()
-                ]
-            }
-            
-            async with self.session.post(
-                "https://api.zyte.com/v1/extract",
-                json=zyte_payload
-            ) as response:
-                if response.status != 200:
-                    logger.error(f"Zyte API returned status {response.status}")
-                    return None
-                    
-                try:
-                    corporation_search_data = await response.json()
-                except Exception as json_error:
-                    logger.error(f"Failed to parse Zyte response as JSON: {json_error}")
-                    return None
-                
-                try:
-                    zyte_response = ZyteHttpResponse(**corporation_search_data)
-                    decoded_body = zyte_response.decode_body()
-                    search_response = CorporationSearchResponse(**decoded_body)
-                    return search_response
-                except (ValueError, ValidationError) as e:
-                    logger.error(f"Failed to decode/parse response: {e}")
-                    if 'httpResponseBody' in corporation_search_data:
-                        logger.debug(f"Response body: {corporation_search_data['httpResponseBody'][:200]}...")
-                except Exception as e:
-                    logger.error(f"Unexpected error parsing response: {e}")
+
+            decoded_body = await self.zyte_client.post_request(
+                url=self.search_url,
+                request_body=payload,
+                headers=headers
+            )
+
+            try:
+                search_response = CorporationSearchResponse(**decoded_body)
+                return search_response
+            except ValidationError as e:
+                logger.error(f"Failed to parse PR search response: {e}")
                 return None
                     
         except Exception as e:
@@ -172,13 +128,8 @@ class AsyncIncorporationSearcher:
     async def _get_business_details_async(self, business_entity_id: int, registration_index: str = None) -> Optional[CorporationDetailResponseData]:
         try:
             # Try different URL patterns based on what we have available
-            urls_to_try = []
-            
-            if registration_index:
-                urls_to_try.append(f"https://rceapi.estado.pr.gov/api/corporation/info/{registration_index}")
-            
-            # Fallback to business entity ID
-            urls_to_try.append(f"https://rceapi.estado.pr.gov/api/corporation/{business_entity_id}")
+            url = f"https://rceapi.estado.pr.gov/api/corporation/info/{registration_index}"
+
             
             headers = {
                 'Accept': 'application/json, text/plain, */*',
@@ -186,19 +137,17 @@ class AsyncIncorporationSearcher:
                 'Authorization': 'null'
             }
             
-            # Try each URL until one works
-            for detail_url in urls_to_try:
-                logger.debug(f"Trying detail URL with registrationIndex: {detail_url}")
-                response = await self._make_corporation_detail_get_request_async(detail_url, headers)
-                logger.debug(f"Detail response type: {type(response)}, value: {response}")
+
+            logger.debug(f"Trying detail URL with registrationIndex: {url}")
+            response = await self._make_corporation_detail_get_request_async(url, headers)
+            logger.debug(f"Detail response type: {type(response)}, value: {response}")
                 
-                if response and response.response and response.response.corporation:
-                    logger.debug(f"Successfully retrieved details for business entity {business_entity_id} using URL: {detail_url}")
-                    return response.response
-                else:
-                    logger.debug(f"URL {detail_url} failed, trying next...")
-            
-            logger.warning(f"No detailed information found for business entity {business_entity_id} after trying {len(urls_to_try)} URLs")
+            if response and response.response and response.response.corporation:
+                logger.debug(f"Successfully retrieved details for business entity {business_entity_id} using URL: {url}")
+                return response.response
+            else:
+                logger.debug(f"URL {url} failed, trying next...")
+
             return None
                 
         except Exception as e:
@@ -206,50 +155,20 @@ class AsyncIncorporationSearcher:
             return None
     
     async def _make_corporation_detail_get_request_async(self, url: str, headers: Dict) -> Optional[CorporationDetailResponse]:
-        if not self.session:
-            logger.error("Session not initialized. Cannot make request.")
-            return None
-        
         try:
             logger.debug(f"Making async GET request through Zyte to {url}")
-            
-            # Prepare Zyte payload for GET request
-            zyte_payload = {
-                "url": url,
-                "httpResponseBody": True,
-                "httpRequestMethod": "GET",
-                "customHttpRequestHeaders": [
-                    {"name": k, "value": v} for k, v in headers.items()
-                ]
-            }
-            
-            async with self.session.post(
-                "https://api.zyte.com/v1/extract",
-                json=zyte_payload
-            ) as resp:
-                if resp.status != 200:
-                    logger.error(f"Zyte API returned status {resp.status}")
-                    return None
-                    
-                try:
-                    zyte_data = await resp.json()
-                except Exception as json_error:
-                    logger.error(f"Failed to parse Zyte response as JSON: {json_error}")
-                    return None
-                
-                try:
-                    zyte_response = ZyteHttpResponse(**zyte_data)
-                    decoded_body = zyte_response.decode_body()
-                    pr_response = CorporationDetailResponse(**decoded_body)
-                    return pr_response
-                except (ValueError, ValidationError) as e:
-                    logger.error(f"Failed to decode/parse httpResponseBody: {e}")
-                    if 'httpResponseBody' in zyte_data:
-                        logger.debug(f"Response body: {zyte_data['httpResponseBody'][:200]}...")
-                    return None
-                except Exception as e:
-                    logger.error(f"Unexpected error parsing response: {e}")
-                    return None
+
+            decoded_body = await self.zyte_client.get_request(
+                url=url,
+                headers=headers
+            )
+
+            try:
+                pr_response = CorporationDetailResponse(**decoded_body)
+                return pr_response
+            except ValidationError as e:
+                logger.error(f"Failed to parse PR detail response: {e}")
+                return None
                     
         except Exception as e:
             logger.error(f"Zyte async GET request failed: {e}")

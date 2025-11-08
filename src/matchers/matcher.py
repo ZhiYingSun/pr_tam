@@ -5,7 +5,6 @@ import logging
 from typing import List, Optional
 from rapidfuzz import fuzz
 from src.data.models import RestaurantRecord, BusinessRecord, MatchResult, MatchingConfig, determine_match_type, is_match_accepted
-from src.searchers.searcher import IncorporationSearcher
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 class RestaurantMatcher:
     """Core matching logic for matching restaurants with Puerto Rico incorporation documents"""
     
-    def __init__(self, searcher: IncorporationSearcher, config: MatchingConfig = None):
+    def __init__(self, searcher, config: MatchingConfig = None):
         self.searcher = searcher
         self.config = config or MatchingConfig()
     

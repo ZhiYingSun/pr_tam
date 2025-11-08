@@ -68,7 +68,7 @@ class ZyteClient:
         url: str,
         request_body: Dict[str, Any],
         headers: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+    ) -> ZyteHttpResponse:
         if not self.session or self.session.closed:
             raise RuntimeError("ZyteClient session not initialized. Use 'async with ZyteClient(...)'")
         
@@ -101,8 +101,7 @@ class ZyteClient:
                 
                 # Parse with Pydantic and decode
                 zyte_response = ZyteHttpResponse(**zyte_data)
-                decoded_body = zyte_response.decode_body()
-                return decoded_body
+                return zyte_response
                 
         except (ValueError, aiohttp.ClientError) as e:
             logger.error(f"Zyte POST request failed: {e}")
@@ -112,7 +111,7 @@ class ZyteClient:
         self,
         url: str,
         headers: Optional[Dict[str, str]] = None
-    ) -> Dict[str, Any]:
+    ) -> ZyteHttpResponse:
         """
         Make a GET request through Zyte API.
         
@@ -158,8 +157,7 @@ class ZyteClient:
                 
                 # Parse with Pydantic and decode
                 zyte_response = ZyteHttpResponse(**zyte_data)
-                decoded_body = zyte_response.decode_body()
-                return decoded_body
+                return zyte_response
                 
         except (ValueError, aiohttp.ClientError) as e:
             logger.error(f"Zyte GET request failed: {e}")

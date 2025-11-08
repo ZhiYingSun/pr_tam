@@ -111,11 +111,6 @@ Examples:
         help='Skip data transformation step'
     )
     parser.add_argument(
-        '--sync',
-        action='store_true',
-        help='Use synchronous processing instead of async'
-    )
-    parser.add_argument(
         '--verbose', '-v',
         action='store_true',
         help='Enable verbose logging'
@@ -156,8 +151,7 @@ Examples:
             output_dir=args.output,
             limit=args.limit,
             batch_size=args.batch_size,
-            max_concurrent=args.max_concurrent,
-            use_async=not args.sync
+            max_concurrent=args.max_concurrent
         ))
         
         if result.get('success'):

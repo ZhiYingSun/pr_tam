@@ -7,10 +7,7 @@ from datetime import datetime
 from src.utils.loader import load_restaurants, get_data_summary
 from src.utils.output import generate_all_outputs, get_match_statistics
 from src.data.models import MatchingConfig, MatchResult, RestaurantRecord
-from src.matchers.matcher import RestaurantMatcher
 from src.matchers.async_matcher import AsyncRestaurantMatcher
-from src.searchers.searcher import IncorporationSearcher
-from src.searchers.mock_searcher import MockIncorporationSearcher
 from src.searchers.async_searcher import AsyncIncorporationSearcher, AsyncMockIncorporationSearcher
 
 logger = logging.getLogger(__name__)
@@ -41,7 +38,6 @@ class MatchingPipeline:
         output_dir: str = "data/output",
         batch_size: int = 100,
         limit: Optional[int] = None,
-        use_async: bool = False,
         max_concurrent: int = 20
     ) -> Dict:
         """
@@ -52,118 +48,18 @@ class MatchingPipeline:
             output_dir: Directory to save output files
             batch_size: Number of restaurants to process per batch
             limit: Optional limit on number of restaurants to process
-            use_async: Whether to use async processing
-            max_concurrent: Maximum concurrent API calls (for async)
+            max_concurrent: Maximum concurrent API calls
             
         Returns:
             Dictionary with results and statistics
         """
-        if use_async:
-            return await self._run_async(
-                input_csv=input_csv,
-                output_dir=output_dir,
-                batch_size=batch_size,
-                limit=limit,
-                max_concurrent=max_concurrent
-            )
-        else:
-            return self._run_sync(
-                input_csv=input_csv,
-                output_dir=output_dir,
-                batch_size=batch_size,
-                limit=limit
-            )
-    
-    def _run_sync(
-        self,
-        input_csv: str,
-        output_dir: str,
-        batch_size: int,
-        limit: Optional[int]
-    ) -> Dict:
-        """Run synchronous matching pipeline."""
-        start_time = datetime.now()
-        
-        try:
-            logger.info(f"Starting synchronous matching pipeline")
-            logger.info(f"Input: {input_csv}")
-            logger.info(f"Output: {output_dir}")
-            logger.info(f"Batch size: {batch_size}")
-            if limit:
-                logger.info(f"Limit: {limit} restaurants")
-            
-            # Step 1: Load restaurants
-            logger.info("Loading restaurants...")
-            restaurants = load_restaurants(input_csv, limit=limit)
-            logger.info(f"Loaded {len(restaurants)} restaurants")
-            
-            # Step 2: Get data summary
-            logger.info("Analyzing data...")
-            summary = get_data_summary(input_csv)
-            logger.info(f"Data summary: {summary['total_restaurants']} total, {summary['cities']} cities")
-            
-            # Step 3: Initialize searcher and matcher
-            if self.use_mock:
-                searcher = MockIncorporationSearcher()
-            else:
-                zyte_api_key = os.getenv('ZYTE_API_KEY')
-                searcher = IncorporationSearcher(zyte_api_key)
-            
-            matcher = RestaurantMatcher(searcher, self.config)
-            
-            # Step 4: Process restaurants
-            logger.info("Processing restaurants...")
-            all_results = []
-            
-            for i in range(0, len(restaurants), batch_size):
-                batch_restaurants = restaurants[i:i + batch_size]
-                batch_num = i // batch_size + 1
-                total_batches = (len(restaurants) + batch_size - 1) // batch_size
-                
-                logger.info(f"Processing batch {batch_num}/{total_batches}: restaurants {i+1}-{min(i + batch_size, len(restaurants))}")
-                
-                try:
-                    batch_results = matcher.match_multiple_restaurants(batch_restaurants)
-                    all_results.extend(batch_results)
-                    
-                    progress = (i + len(batch_restaurants)) / len(restaurants) * 100
-                    logger.info(f"Progress: {i + len(batch_restaurants)}/{len(restaurants)} ({progress:.1f}%)")
-                    batch_matched = len([r for r in batch_results if r.is_accepted])
-                    logger.info(f"Batch completed: {batch_matched}/{len(batch_results)} matched")
-                    
-                except Exception as e:
-                    logger.error(f"Error processing batch {batch_num}: {e}")
-            
-            logger.info(f"Completed processing {len(restaurants)} restaurants")
-            
-            # Step 5: Generate outputs
-            logger.info("Generating output files...")
-            output_files = generate_all_outputs(all_results, output_dir)
-            
-            # Step 6: Calculate statistics
-            logger.info("Calculating statistics...")
-            statistics = get_match_statistics(all_results)
-            
-            duration = datetime.now() - start_time
-            logger.info(f"Pipeline completed in {duration}")
-            logger.info(f"Match rate: {statistics['match_rate']:.1f}%")
-            logger.info(f"Average confidence: {statistics['avg_confidence_score']:.1f}%")
-            
-            return {
-                'success': True,
-                'results': all_results,
-                'statistics': statistics,
-                'output_files': output_files,
-                'duration': duration
-            }
-            
-        except Exception as e:
-            logger.error(f"Pipeline failed: {e}", exc_info=True)
-            return {
-                'success': False,
-                'error': str(e),
-                'duration': datetime.now() - start_time
-            }
+        return await self._run_async(
+            input_csv=input_csv,
+            output_dir=output_dir,
+            batch_size=batch_size,
+            limit=limit,
+            max_concurrent=max_concurrent
+        )
     
     async def _run_async(
         self,

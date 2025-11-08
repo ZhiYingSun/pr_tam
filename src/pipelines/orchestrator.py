@@ -54,8 +54,7 @@ class PipelineOrchestrator:
         output_dir: str = "data/output",
         limit: int = 50,
         batch_size: int = 25,
-        max_concurrent: int = 20,
-        use_async: bool = True
+        max_concurrent: int = 20
     ) -> Dict:
         """
         Run the complete pipeline.
@@ -66,7 +65,6 @@ class PipelineOrchestrator:
             limit: Number of restaurants to process
             batch_size: Batch size for processing
             max_concurrent: Maximum concurrent API calls
-            use_async: Whether to use async processing for matching
             
         Returns:
             Dictionary with complete pipeline results
@@ -84,7 +82,6 @@ class PipelineOrchestrator:
         logger.info(f"  Limit: {limit}")
         logger.info(f"  Batch size: {batch_size}")
         logger.info(f"  Max concurrent: {max_concurrent}")
-        logger.info(f"  Use async: {use_async}")
         logger.info(f"  Use mock: {self.use_mock}")
         logger.info(f"  Skip validation: {self.skip_validation}")
         logger.info(f"  Skip transformation: {self.skip_transformation}")
@@ -107,7 +104,6 @@ class PipelineOrchestrator:
             output_dir=str(output_path),
             batch_size=batch_size,
             limit=limit,
-            use_async=use_async,
             max_concurrent=max_concurrent
         )
         

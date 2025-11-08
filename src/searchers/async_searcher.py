@@ -304,15 +304,12 @@ class AsyncIncorporationSearcher:
                 if agent_addr.address2:
                     address_parts.append(agent_addr.address2)
                 resident_agent_address = ' '.join(address_parts).strip()
-        
-        return BusinessRecord(
-            legal_name=corporation.corpName if corporation else '',
-            registration_number=str(corporation.corpRegisterNumber) if corporation and corporation.corpRegisterNumber else '',
-            registration_index=corporation.corpRegisterIndex if corporation else '',
+
+        return BusinessRecord.from_corporation(
+            corporation,
             business_address=business_address,
-            status=corporation.statusEn if corporation else '',
             resident_agent_name=resident_agent_name,
-            resident_agent_address=resident_agent_address
+            resident_agent_address=resident_agent_address,
         )
     
     def _create_business_record_from_search(self, record: CorporationSearchRecord) -> BusinessRecord:

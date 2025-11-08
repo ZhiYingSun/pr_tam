@@ -1,21 +1,35 @@
 """
 Data models for Puerto Rico Restaurant Matcher
 """
+import json
+import base64
+import binascii
 import pandas as pd
 from dataclasses import dataclass
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict, Any
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class BusinessRecord:
+class BusinessRecord(BaseModel):
     """Represents a business entity from Puerto Rico incorporation documents"""
     legal_name: str
     registration_number: str
     registration_index: str
-    business_address: str
     status: str
-    resident_agent_name: str
-    resident_agent_address: str
+    # Optional fields - not available in search results, only in detail responses
+    business_address: Optional[str] = None
+    resident_agent_name: Optional[str] = None
+    resident_agent_address: Optional[str] = None
+
+    @classmethod
+    def from_corporation(cls, corporation: Optional[CorporationDetail], **kwargs):
+        return cls(
+            legal_name=corporation.corpName if corporation else '',
+            registration_number=str(corporation.corpRegisterNumber) if corporation and corporation.corpRegisterNumber else '',
+            registration_index=corporation.corpRegisterIndex if corporation else '',
+            status=corporation.statusEn if corporation else '',
+            **kwargs
+        )
 
 
 
@@ -49,6 +63,98 @@ class MatchResult:
     postal_code_match: Optional[bool] = None
     city_match: Optional[bool] = None
     match_reason: Optional[str] = None
+
+
+class ZyteHttpResponse(BaseModel):
+    httpResponseBody: Optional[str] = Field(None, description="Base64 encoded response body")
+
+    def decode_body(self) -> Dict[str, Any]:
+        if not self.httpResponseBody:
+            raise ValueError("httpResponseBody is missing or empty")
+
+        try:
+            decoded_body = base64.b64decode(self.httpResponseBody).decode('utf-8')
+            return json.loads(decoded_body)
+        except (binascii.Error, UnicodeDecodeError) as e:
+            raise ValueError(f"Failed to decode base64 response body: {e}")
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse JSON from decoded body: {e}")
+
+
+class CorporationSearchRecord(BaseModel):
+    businessEntityId: Optional[int] = None
+    registrationNumber: Optional[int] = None
+    registrationIndex: Optional[str] = None
+    corpName: Optional[str] = None
+    classEs: Optional[str] = None
+    classEn: Optional[str] = None
+    profitTypeEs: Optional[str] = None
+    profitTypeEn: Optional[str] = None
+    statusId: Optional[int] = None
+    statusEs: Optional[str] = None
+    statusEn: Optional[str] = None
+
+
+class CorporationSearchResponseData(BaseModel):
+    totalRecords: Optional[int] = None
+    records: List[CorporationSearchRecord] = Field(default_factory=list)
+
+
+class CorporationSearchResponse(BaseModel):
+    response: Optional[CorporationSearchResponseData] = None
+    code: Optional[int] = None
+    info: Optional[Any] = None
+    success: Optional[bool] = None
+
+
+# Corporation Detail Response Models
+class StreetAddressDetail(BaseModel):
+    address1: Optional[str] = None
+    address2: Optional[str] = None
+    city: Optional[str] = None
+    zip: Optional[str] = None
+
+
+class IndividualNameDetail(BaseModel):
+    firstName: Optional[str] = None
+    middleName: Optional[str] = None
+    lastName: Optional[str] = None
+    surName: Optional[str] = None
+
+
+class OrganizationNameDetail(BaseModel):
+    name: Optional[str] = None
+
+
+class CorporationDetail(BaseModel):
+    corpName: Optional[str] = None
+    corpRegisterNumber: Optional[int] = None
+    corpRegisterIndex: Optional[str] = None
+    statusEn: Optional[str] = None
+
+
+class MainLocationDetail(BaseModel):
+    streetAddress: Optional[StreetAddressDetail] = None
+
+
+class ResidentAgentDetail(BaseModel):
+    isIndividual: Optional[bool] = None
+    individualName: Optional[IndividualNameDetail] = None
+    organizationName: Optional[OrganizationNameDetail] = None
+    streetAddress: Optional[StreetAddressDetail] = None
+
+
+class CorporationDetailResponseData(BaseModel):
+    corporation: Optional[CorporationDetail] = None
+    mainLocation: Optional[MainLocationDetail] = None
+    residentAgent: Optional[ResidentAgentDetail] = None
+
+
+class CorporationDetailResponse(BaseModel):
+    response: Optional[CorporationDetailResponseData] = None
+    code: Optional[int] = None
+    info: Optional[Any] = None
+    success: Optional[bool] = None
 
 
 class MatchingConfig:

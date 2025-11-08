@@ -225,7 +225,12 @@ class IncorporationSearcher:
             
             if 'streetAddress' in resident_agent:
                 agent_addr = resident_agent['streetAddress']
-                resident_agent_address = f"{agent_addr.get('address1', '')} {agent_addr.get('address2', '')}".strip()
+                address_parts = []
+                if agent_addr.get('address1'):
+                    address_parts.append(agent_addr['address1'])
+                if agent_addr.get('address2'):
+                    address_parts.append(agent_addr['address2'])
+                resident_agent_address = ' '.join(address_parts).strip()
         
         return BusinessRecord(
             legal_name=corporation.get('corpName', ''),
@@ -243,8 +248,5 @@ class IncorporationSearcher:
             legal_name=record.get('corpName', ''),
             registration_number=str(record.get('registrationNumber', '')),
             registration_index=record.get('registrationIndex', ''),
-            business_address='',  # Not available in search results
-            status=record.get('statusEn', ''),
-            resident_agent_name='',  # Not available in search results
-            resident_agent_address=''  # Not available in search results
+            status=record.get('statusEn', '')
         )

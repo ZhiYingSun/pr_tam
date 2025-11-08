@@ -41,7 +41,7 @@ class MatchingPipeline:
         max_concurrent: int = 20
     ) -> Dict:
         """
-        Run the matching pipeline (async only).
+        Run the matching pipeline.
         
         Args:
             input_csv: Path to input CSV file

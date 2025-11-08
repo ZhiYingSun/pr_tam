@@ -57,7 +57,7 @@ class PipelineOrchestrator:
         max_concurrent: int = 20
     ) -> Dict:
         """
-        Run the complete pipeline (async only).
+        Run the complete pipeline.
         
         Args:
             input_csv: Path to input CSV file

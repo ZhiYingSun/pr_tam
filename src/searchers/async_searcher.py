@@ -5,12 +5,17 @@ import json
 import logging
 import asyncio
 import re
-import base64
 from typing import Dict, List, Any, Optional
 import aiohttp
 from aiohttp import ClientSession, ClientTimeout, BasicAuth
 
-from src.data.models import BusinessRecord
+from src.data.models import (
+    BusinessRecord,
+    ZyteHttpResponse,
+    CorporationSearchResponse,
+    CorporationDetailResponse, CorporationSearchRecord,
+)
+from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -67,23 +72,23 @@ class AsyncIncorporationSearcher:
         
         try:
             # Use Zyte for rate-limited requests
-            response = await self._make_zyte_request_async(payload, headers)
+            response = await self._make_corporation_search_request_async(payload, headers)
             logger.debug(f"Search response for '{business_name}': {response}")
             
-            if response and 'response' in response and 'records' in response['response']:
-                records = response['response']['records']
+            if response and response.response and response.response.records:
+                records = response.response.records
                 logger.info(f"Found {len(records)} records for '{business_name}'")
                 business_records = []
                 
                 # Get detailed information for each business
                 for record in records:
                     try:
-                        business_entity_id = record.get('businessEntityId')
-                        logger.debug(f"Search result for '{business_name}': corpName='{record.get('corpName')}', businessEntityId={business_entity_id}")
+                        business_entity_id = record.businessEntityId
+                        logger.debug(f"Search result for '{business_name}': corpName='{record.corpName}', businessEntityId={business_entity_id}")
                         
                         if business_entity_id:
                             # Get detailed business information using registrationIndex
-                            registration_index = record.get('registrationIndex')
+                            registration_index = record.registrationIndex
                             detailed_record = await self._get_business_details_async(business_entity_id, registration_index)
                             if detailed_record:
                                 business_record = self._create_business_record_from_details(detailed_record)
@@ -112,7 +117,7 @@ class AsyncIncorporationSearcher:
             logger.error(f"Error searching for business '{business_name}': {e}")
             return []
     
-    async def _make_zyte_request_async(self, payload: Dict, headers: Dict) -> Optional[Dict]:
+    async def _make_corporation_search_request_async(self, payload: Dict, headers: Dict) -> Optional[CorporationSearchResponse]:
         if not self.session:
             logger.error("Session not initialized. Cannot make request.")
             return None
@@ -134,30 +139,29 @@ class AsyncIncorporationSearcher:
             async with self.session.post(
                 "https://api.zyte.com/v1/extract",
                 json=zyte_payload
-            ) as resp:
-                if resp.status != 200:
-                    logger.error(f"Zyte API returned status {resp.status}")
+            ) as response:
+                if response.status != 200:
+                    logger.error(f"Zyte API returned status {response.status}")
                     return None
                     
                 try:
-                    data = await resp.json()
+                    corporation_search_data = await response.json()
                 except Exception as json_error:
                     logger.error(f"Failed to parse Zyte response as JSON: {json_error}")
                     return None
                 
-                if 'httpResponseBody' in data and data['httpResponseBody']:
-                    try:
-                        # Decode base64 response body
-                        decoded_body = base64.b64decode(data['httpResponseBody']).decode('utf-8')
-                        body = json.loads(decoded_body)
-                        return body
-                    except (json.JSONDecodeError, base64.binascii.Error, UnicodeDecodeError) as decode_error:
-                        logger.error(f"Failed to decode/parse httpResponseBody: {decode_error}")
-                        logger.debug(f"Response body: {data['httpResponseBody'][:200]}...")
-                        return None
-                else:
-                    logger.warning(f"No httpResponseBody in Zyte response: {data}")
-                    return None
+                try:
+                    zyte_response = ZyteHttpResponse(**corporation_search_data)
+                    decoded_body = zyte_response.decode_body()
+                    search_response = CorporationSearchResponse(**decoded_body)
+                    return search_response
+                except (ValueError, ValidationError) as e:
+                    logger.error(f"Failed to decode/parse response: {e}")
+                    if 'httpResponseBody' in corporation_search_data:
+                        logger.debug(f"Response body: {corporation_search_data['httpResponseBody'][:200]}...")
+                except Exception as e:
+                    logger.error(f"Unexpected error parsing response: {e}")
+                return None
                     
         except Exception as e:
             logger.error(f"Zyte async POST request failed: {e}")
@@ -186,9 +190,9 @@ class AsyncIncorporationSearcher:
                 response = await self._make_zyte_get_request_async(detail_url, headers)
                 logger.debug(f"Detail response type: {type(response)}, value: {response}")
                 
-                if response and isinstance(response, dict) and 'response' in response and response['response'] and 'corporation' in response['response']:
+                if response and response.response and response.response.get('corporation'):
                     logger.debug(f"Successfully retrieved details for business entity {business_entity_id} using URL: {detail_url}")
-                    return response['response']
+                    return response.response
                 else:
                     logger.debug(f"URL {detail_url} failed, trying next...")
             
@@ -199,7 +203,7 @@ class AsyncIncorporationSearcher:
             logger.error(f"Error getting business details for entity {business_entity_id}: {e}")
             return None
     
-    async def _make_zyte_get_request_async(self, url: str, headers: Dict) -> Optional[Dict]:
+    async def _make_zyte_get_request_async(self, url: str, headers: Dict) -> Optional[CorporationDetailResponse]:
         if not self.session:
             logger.error("Session not initialized. Cannot make request.")
             return None
@@ -226,23 +230,23 @@ class AsyncIncorporationSearcher:
                     return None
                     
                 try:
-                    data = await resp.json()
+                    zyte_data = await resp.json()
                 except Exception as json_error:
                     logger.error(f"Failed to parse Zyte response as JSON: {json_error}")
                     return None
                 
-                if data and 'httpResponseBody' in data and data['httpResponseBody']:
-                    try:
-                        # Decode base64 response body
-                        decoded_body = base64.b64decode(data['httpResponseBody']).decode('utf-8')
-                        body = json.loads(decoded_body)
-                        return body
-                    except (json.JSONDecodeError, base64.binascii.Error, UnicodeDecodeError) as decode_error:
-                        logger.error(f"Failed to decode/parse httpResponseBody: {decode_error}")
-                        logger.debug(f"Response body: {data['httpResponseBody'][:200]}...")
-                        return None
-                else:
-                    logger.warning(f"No httpResponseBody in Zyte response: {data}")
+                try:
+                    zyte_response = ZyteHttpResponse(**zyte_data)
+                    decoded_body = zyte_response.decode_body()
+                    pr_response = CorporationDetailResponse(**decoded_body)
+                    return pr_response
+                except (ValueError, ValidationError) as e:
+                    logger.error(f"Failed to decode/parse httpResponseBody: {e}")
+                    if 'httpResponseBody' in zyte_data:
+                        logger.debug(f"Response body: {zyte_data['httpResponseBody'][:200]}...")
+                    return None
+                except Exception as e:
+                    logger.error(f"Unexpected error parsing response: {e}")
                     return None
                     
         except Exception as e:
@@ -292,7 +296,12 @@ class AsyncIncorporationSearcher:
             
             if 'streetAddress' in resident_agent:
                 agent_addr = resident_agent['streetAddress']
-                resident_agent_address = f"{agent_addr.get('address1', '')} {agent_addr.get('address2', '')}".strip()
+                address_parts = []
+                if agent_addr.get('address1'):
+                    address_parts.append(agent_addr['address1'])
+                if agent_addr.get('address2'):
+                    address_parts.append(agent_addr['address2'])
+                resident_agent_address = ' '.join(address_parts).strip()
         
         return BusinessRecord(
             legal_name=corporation.get('corpName', ''),
@@ -304,15 +313,12 @@ class AsyncIncorporationSearcher:
             resident_agent_address=resident_agent_address
         )
     
-    def _create_business_record_from_search(self, record: Dict) -> BusinessRecord:
+    def _create_business_record_from_search(self, record: CorporationSearchRecord) -> BusinessRecord:
         return BusinessRecord(
-            legal_name=record.get('corpName', ''),
-            registration_number=str(record.get('registrationNumber', '')),
-            registration_index=record.get('registrationIndex', ''),
-            business_address='',  # Not available in search results
-            status=record.get('statusEn', ''),
-            resident_agent_name='',  # Not available in search results
-            resident_agent_address=''  # Not available in search results
+            legal_name=record.corpName or '',
+            registration_number=str(record.registrationNumber) if record.registrationNumber else '',
+            registration_index=record.registrationIndex or '',
+            status=record.statusEn or '',
         )
 
 
@@ -371,12 +377,9 @@ class AsyncMockIncorporationSearcher:
                 business_record = BusinessRecord(
                     legal_name=record.get('corpName', ''),
                     registration_number=str(record.get('registrationNumber', '')),
-                    street_address='',  # Mock data
-                    city='',  # Mock data
-                    postal_code='',  # Mock data
+                    registration_index='',  # Mock data
                     status=record.get('statusEn', ''),
-                    resident_agent_name='',  # Mock data
-                    resident_agent_address=''  # Mock data
+                    # Optional fields left as None for mock data
                 )
                 business_records.append(business_record)
             except Exception as e:

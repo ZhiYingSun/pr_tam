@@ -1,21 +1,25 @@
 """
 Data models for Puerto Rico Restaurant Matcher
 """
+import json
+import base64
+import binascii
 import pandas as pd
 from dataclasses import dataclass
-from typing import Optional, Tuple, List
+from typing import Optional, Tuple, List, Dict, Any
+from pydantic import BaseModel, Field
 
 
-@dataclass
-class BusinessRecord:
+class BusinessRecord(BaseModel):
     """Represents a business entity from Puerto Rico incorporation documents"""
     legal_name: str
     registration_number: str
     registration_index: str
-    business_address: str
     status: str
-    resident_agent_name: str
-    resident_agent_address: str
+    # Optional fields - not available in search results, only in detail responses
+    business_address: Optional[str] = None
+    resident_agent_name: Optional[str] = None
+    resident_agent_address: Optional[str] = None
 
 
 
@@ -49,6 +53,52 @@ class MatchResult:
     postal_code_match: Optional[bool] = None
     city_match: Optional[bool] = None
     match_reason: Optional[str] = None
+
+
+class ZyteHttpResponse(BaseModel):
+    httpResponseBody: Optional[str] = Field(None, description="Base64 encoded response body")
+
+    def decode_body(self) -> Dict[str, Any]:
+        if not self.httpResponseBody:
+            raise ValueError("httpResponseBody is missing or empty")
+
+        try:
+            decoded_body = base64.b64decode(self.httpResponseBody).decode('utf-8')
+            return json.loads(decoded_body)
+        except (binascii.Error, UnicodeDecodeError) as e:
+            raise ValueError(f"Failed to decode base64 response body: {e}")
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Failed to parse JSON from decoded body: {e}")
+
+
+class CorporationSearchRecord(BaseModel):
+    businessEntityId: Optional[int] = None
+    registrationNumber: Optional[int] = None
+    registrationIndex: Optional[str] = None
+    corpName: Optional[str] = None
+    classEs: Optional[str] = None
+    classEn: Optional[str] = None
+    profitTypeEs: Optional[str] = None
+    profitTypeEn: Optional[str] = None
+    statusId: Optional[int] = None
+    statusEs: Optional[str] = None
+    statusEn: Optional[str] = None
+
+
+class CorporationSearchResponseData(BaseModel):
+    totalRecords: Optional[int] = None
+    records: List[CorporationSearchRecord] = Field(default_factory=list)
+
+
+class CorporationSearchResponse(BaseModel):
+    response: Optional[CorporationSearchResponseData] = None
+    code: Optional[int] = None
+    info: Optional[Any] = None
+    success: Optional[bool] = None
+
+
+class CorporationDetailResponse(BaseModel):
+    response: Optional[Dict[str, Any]] = None
 
 
 class MatchingConfig:

@@ -13,7 +13,9 @@ from src.data.models import (
     BusinessRecord,
     ZyteHttpResponse,
     CorporationSearchResponse,
-    CorporationDetailResponse, CorporationSearchRecord,
+    CorporationDetailResponse,
+    CorporationDetailResponseData,
+    CorporationSearchRecord,
 )
 from pydantic import ValidationError
 
@@ -167,7 +169,7 @@ class AsyncIncorporationSearcher:
             logger.error(f"Zyte async POST request failed: {e}")
             return None
     
-    async def _get_business_details_async(self, business_entity_id: int, registration_index: str = None) -> Optional[Dict]:
+    async def _get_business_details_async(self, business_entity_id: int, registration_index: str = None) -> Optional[CorporationDetailResponseData]:
         try:
             # Try different URL patterns based on what we have available
             urls_to_try = []
@@ -187,10 +189,10 @@ class AsyncIncorporationSearcher:
             # Try each URL until one works
             for detail_url in urls_to_try:
                 logger.debug(f"Trying detail URL with registrationIndex: {detail_url}")
-                response = await self._make_zyte_get_request_async(detail_url, headers)
+                response = await self._make_corporation_detail_get_request_async(detail_url, headers)
                 logger.debug(f"Detail response type: {type(response)}, value: {response}")
                 
-                if response and response.response and response.response.get('corporation'):
+                if response and response.response and response.response.corporation:
                     logger.debug(f"Successfully retrieved details for business entity {business_entity_id} using URL: {detail_url}")
                     return response.response
                 else:
@@ -203,7 +205,7 @@ class AsyncIncorporationSearcher:
             logger.error(f"Error getting business details for entity {business_entity_id}: {e}")
             return None
     
-    async def _make_zyte_get_request_async(self, url: str, headers: Dict) -> Optional[CorporationDetailResponse]:
+    async def _make_corporation_detail_get_request_async(self, url: str, headers: Dict) -> Optional[CorporationDetailResponse]:
         if not self.session:
             logger.error("Session not initialized. Cannot make request.")
             return None
@@ -253,25 +255,25 @@ class AsyncIncorporationSearcher:
             logger.error(f"Zyte async GET request failed: {e}")
             return None
     
-    def _create_business_record_from_details(self, details: Dict) -> BusinessRecord:
-        corporation = details.get('corporation', {})
-        main_location = details.get('mainLocation', {})
-        resident_agent = details.get('residentAgent', {})
+    def _create_business_record_from_details(self, details: CorporationDetailResponseData) -> BusinessRecord:
+        corporation = details.corporation
+        main_location = details.mainLocation
+        resident_agent = details.residentAgent
         
         # Extract address information
         business_address = ''
         
-        if main_location and 'streetAddress' in main_location:
-            street_addr = main_location['streetAddress']
+        if main_location and main_location.streetAddress:
+            street_addr = main_location.streetAddress
             address_parts = []
-            if street_addr.get('address1'):
-                address_parts.append(street_addr['address1'])
-            if street_addr.get('address2'):
-                address_parts.append(street_addr['address2'])
-            if street_addr.get('city'):
-                address_parts.append(street_addr['city'])
-            if street_addr.get('zip'):
-                address_parts.append(street_addr['zip'])
+            if street_addr.address1:
+                address_parts.append(street_addr.address1)
+            if street_addr.address2:
+                address_parts.append(street_addr.address2)
+            if street_addr.city:
+                address_parts.append(street_addr.city)
+            if street_addr.zip:
+                address_parts.append(street_addr.zip)
             business_address = ', '.join(address_parts)
         
         # Extract resident agent information
@@ -279,36 +281,36 @@ class AsyncIncorporationSearcher:
         resident_agent_address = ''
         
         if resident_agent:
-            if resident_agent.get('isIndividual') and 'individualName' in resident_agent:
-                individual = resident_agent['individualName']
+            if resident_agent.isIndividual and resident_agent.individualName:
+                individual = resident_agent.individualName
                 name_parts = []
-                if individual.get('firstName'):
-                    name_parts.append(individual['firstName'])
-                if individual.get('middleName'):
-                    name_parts.append(individual['middleName'])
-                if individual.get('lastName'):
-                    name_parts.append(individual['lastName'])
-                if individual.get('surName'):
-                    name_parts.append(individual['surName'])
+                if individual.firstName:
+                    name_parts.append(individual.firstName)
+                if individual.middleName:
+                    name_parts.append(individual.middleName)
+                if individual.lastName:
+                    name_parts.append(individual.lastName)
+                if individual.surName:
+                    name_parts.append(individual.surName)
                 resident_agent_name = ' '.join(name_parts)
-            elif 'organizationName' in resident_agent:
-                resident_agent_name = resident_agent['organizationName'].get('name', '')
+            elif resident_agent.organizationName:
+                resident_agent_name = resident_agent.organizationName.name or ''
             
-            if 'streetAddress' in resident_agent:
-                agent_addr = resident_agent['streetAddress']
+            if resident_agent.streetAddress:
+                agent_addr = resident_agent.streetAddress
                 address_parts = []
-                if agent_addr.get('address1'):
-                    address_parts.append(agent_addr['address1'])
-                if agent_addr.get('address2'):
-                    address_parts.append(agent_addr['address2'])
+                if agent_addr.address1:
+                    address_parts.append(agent_addr.address1)
+                if agent_addr.address2:
+                    address_parts.append(agent_addr.address2)
                 resident_agent_address = ' '.join(address_parts).strip()
         
         return BusinessRecord(
-            legal_name=corporation.get('corpName', ''),
-            registration_number=str(corporation.get('corpRegisterNumber', '')),
-            registration_index=corporation.get('corpRegisterIndex', ''),
+            legal_name=corporation.corpName if corporation else '',
+            registration_number=str(corporation.corpRegisterNumber) if corporation and corporation.corpRegisterNumber else '',
+            registration_index=corporation.corpRegisterIndex if corporation else '',
             business_address=business_address,
-            status=corporation.get('statusEn', ''),
+            status=corporation.statusEn if corporation else '',
             resident_agent_name=resident_agent_name,
             resident_agent_address=resident_agent_address
         )

@@ -97,8 +97,54 @@ class CorporationSearchResponse(BaseModel):
     success: Optional[bool] = None
 
 
+# Corporation Detail Response Models
+class StreetAddressDetail(BaseModel):
+    address1: Optional[str] = None
+    address2: Optional[str] = None
+    city: Optional[str] = None
+    zip: Optional[str] = None
+
+
+class IndividualNameDetail(BaseModel):
+    firstName: Optional[str] = None
+    middleName: Optional[str] = None
+    lastName: Optional[str] = None
+    surName: Optional[str] = None
+
+
+class OrganizationNameDetail(BaseModel):
+    name: Optional[str] = None
+
+
+class CorporationDetail(BaseModel):
+    corpName: Optional[str] = None
+    corpRegisterNumber: Optional[int] = None
+    corpRegisterIndex: Optional[str] = None
+    statusEn: Optional[str] = None
+
+
+class MainLocationDetail(BaseModel):
+    streetAddress: Optional[StreetAddressDetail] = None
+
+
+class ResidentAgentDetail(BaseModel):
+    isIndividual: Optional[bool] = None
+    individualName: Optional[IndividualNameDetail] = None
+    organizationName: Optional[OrganizationNameDetail] = None
+    streetAddress: Optional[StreetAddressDetail] = None
+
+
+class CorporationDetailResponseData(BaseModel):
+    corporation: Optional[CorporationDetail] = None
+    mainLocation: Optional[MainLocationDetail] = None
+    residentAgent: Optional[ResidentAgentDetail] = None
+
+
 class CorporationDetailResponse(BaseModel):
-    response: Optional[Dict[str, Any]] = None
+    response: Optional[CorporationDetailResponseData] = None
+    code: Optional[int] = None
+    info: Optional[Any] = None
+    success: Optional[bool] = None
 
 
 class MatchingConfig:

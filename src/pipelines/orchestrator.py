@@ -22,6 +22,7 @@ class PipelineOrchestrator:
         self,
         searcher,
         config: Optional[MatchingConfig] = None,
+        validator: Optional[OpenAIValidator] = None,
         skip_validation: bool = False,
         skip_transformation: bool = False
     ):
@@ -32,6 +33,8 @@ class PipelineOrchestrator:
             searcher: AsyncIncorporationSearcher instance (or mock for testing).
                      Must implement async context manager and search_business_async().
             config: Optional matching configuration
+            validator: Optional OpenAIValidator instance (or mock for testing).
+                      If None and skip_validation=False, will attempt to create from env.
             skip_validation: Whether to skip OpenAI validation step
             skip_transformation: Whether to skip data transformation step
         """
@@ -40,7 +43,12 @@ class PipelineOrchestrator:
         self.skip_validation = skip_validation
         self.skip_transformation = skip_transformation
         
-        if not skip_validation:
+        if validator is not None:
+            # Use injected validator
+            self.validator = validator
+            self.skip_validation = False  # Override skip_validation if validator provided
+        elif not skip_validation:
+            # Try to create validator from environment if not provided
             try:
                 openai_api_key = os.getenv('OPENAI_API_KEY')
                 if not openai_api_key:

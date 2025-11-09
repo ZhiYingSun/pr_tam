@@ -25,6 +25,7 @@ sys.path.insert(0, str(project_root))
 from src.pipelines.orchestrator import PipelineOrchestrator
 from src.data.models import MatchingConfig
 from src.searchers.async_searcher import AsyncIncorporationSearcher, AsyncMockIncorporationSearcher
+from src.validators.openai_validator import OpenAIValidator
 
 # Configure logging
 logs_dir = project_root / "logs"
@@ -140,11 +141,30 @@ Examples:
         logger.error(f"Failed to create searcher: {e}")
         sys.exit(1)
     
-    # Initialize orchestrator with injected searcher
+    # Create validator (dependency injection - allows passing mock for testing)
+    validator = None
+    if not args.skip_validation:
+        try:
+            openai_api_key = os.getenv("OPENAI_API_KEY")
+            if not openai_api_key:
+                logger.warning("OPENAI_API_KEY not set, skipping validation")
+                args.skip_validation = True
+            else:
+                validator = OpenAIValidator(
+                    api_key=openai_api_key,
+                    model="gpt-4o-mini",
+                    max_concurrent_calls=5
+                )
+        except Exception as e:
+            logger.warning(f"Failed to create validator: {e}, skipping validation")
+            args.skip_validation = True
+    
+    # Initialize orchestrator with injected dependencies
     try:
         orchestrator = PipelineOrchestrator(
             searcher=searcher,
             config=config,
+            validator=validator,
             skip_validation=args.skip_validation,
             skip_transformation=args.skip_transformation
         )

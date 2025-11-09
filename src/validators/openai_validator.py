@@ -216,3 +216,48 @@ def create_validation_summary(validation_results: List[ValidationResult]) -> Dic
         "sample_rejects": rejected[:2],
         "sample_manual_reviews": manual_review[:2]
     }
+
+
+class MockOpenAIValidator:
+    """
+    Mock OpenAI validator for testing.
+    
+    Returns predefined validation results without making actual API calls.
+    Useful for testing the orchestrator without OpenAI API costs or rate limits.
+    """
+    
+    def __init__(self):
+        """Initialize mock validator."""
+        pass
+    
+    async def validate_match(self, match: MatchResult) -> ValidationResult:
+        """
+        Mock validation that returns a high-confidence accept result.
+        
+        Args:
+            match: MatchResult to validate
+            
+        Returns:
+            ValidationResult with predefined high-confidence acceptance
+        """
+        if not match.business:
+            return ValidationResult(
+                restaurant_name=match.restaurant.name,
+                business_legal_name="",
+                rapidfuzz_confidence_score=match.confidence_score,
+                openai_recommendation="reject",
+                openai_reasoning="No business record available for validation.",
+                final_status="reject"
+            )
+        
+        # Return high-confidence accept for any match with a business
+        return ValidationResult(
+            restaurant_name=match.restaurant.name,
+            business_legal_name=match.business.legal_name,
+            rapidfuzz_confidence_score=match.confidence_score,
+            openai_match_score=95,
+            openai_confidence="high",
+            openai_recommendation="accept",
+            openai_reasoning="Mock validation: High confidence match based on name and location similarity.",
+            final_status="accept"
+        )

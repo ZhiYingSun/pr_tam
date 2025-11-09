@@ -169,13 +169,26 @@ Example JSON Output:
     async def validate_matches_batch(self, matches: List[MatchResult], batch_size: int = 10) -> List[ValidationResult]:
         """Validates a list of matches in batches."""
         all_validation_results: List[ValidationResult] = []
+        total_batches = (len(matches) + batch_size - 1) // batch_size
         
         for i in range(0, len(matches), batch_size):
             batch_matches = matches[i:i + batch_size]
-            logger.info(f"Processing validation batch {i // batch_size + 1}/{len(matches) // batch_size + 1}")
+            batch_num = i // batch_size + 1
+            logger.info(f"Processing validation batch {batch_num}/{total_batches}")
             
             tasks = [self.validate_match(match) for match in batch_matches]
             batch_results = await asyncio.gather(*tasks, return_exceptions=True)
+            
+            # Count errors in this batch
+            batch_error_count = sum(1 for r in batch_results if isinstance(r, Exception))
+            batch_error_rate = batch_error_count / len(batch_matches) if batch_matches else 0.0
+            
+            # Check if batch failure rate exceeds threshold
+            if batch_error_rate > 0.5:
+                raise RuntimeError(
+                    f"Validation batch {batch_num} failed: {batch_error_count}/{len(batch_matches)} errors "
+                    f"({batch_error_rate*100:.1f}% error rate exceeds 50% threshold)"
+                )
             
             for j, result in enumerate(batch_results):
                 if isinstance(result, Exception):

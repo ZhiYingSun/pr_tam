@@ -7,10 +7,10 @@ from datetime import datetime
 
 from src.utils.loader import load_restaurants
 from src.utils.output import generate_all_outputs, get_match_statistics
-from src.data.models import MatchingConfig, RestaurantRecord, MatchResult
+from src.data.models import MatchingConfig, RestaurantRecord, MatchResult, ValidationResult
 from src.matchers.async_matcher import AsyncRestaurantMatcher
 from src.searchers.async_searcher import AsyncIncorporationSearcher
-from src.validators.llm_validator import LLMValidator, ValidationResult
+from src.validators.llm_validator import LLMValidator
 from src.pipelines.transformation_pipeline import TransformationPipeline
 from src.clients.openai_client import OpenAIClient
 

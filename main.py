@@ -148,18 +148,7 @@ Examples:
             max_concurrent=args.max_concurrent
         ))
         
-        # Check error rate and fail if threshold exceeded
-        error_rate = result.get('error_rate', 0.0)
-        if error_rate > 0.5:
-            logger.error("\n" + "=" * 80)
-            logger.error("PIPELINE FAILED")
-            logger.error("=" * 80)
-            logger.error(f"❌ Pipeline failed: {error_rate*100:.1f}% error rate exceeds 50% threshold")
-            logger.error(f"   Error count: {result.get('error_count', 0)}")
-            logger.error(f"   Total restaurants: {len(result.get('results', [])) + result.get('error_count', 0)}")
-            logger.error("=" * 80)
-            sys.exit(1)
-        
+        # Check success status (orchestrator raises exception if error_rate > 50%)
         if result.get('success'):
             logger.info("\n" + "=" * 80)
             logger.info("PIPELINE SUMMARY")
@@ -167,8 +156,10 @@ Examples:
             logger.info(f"✅ Pipeline completed successfully")
             logger.info(f"📁 Output directory: {result['output_dir']}")
             
-            if result.get('error_count', 0) > 0:
-                logger.info(f"⚠️  Errors encountered: {result['error_count']} ({error_rate*100:.1f}% error rate)")
+            error_count = result.get('error_count', 0)
+            error_rate = result.get('error_rate', 0.0)
+            if error_count > 0:
+                logger.info(f"⚠️  Errors encountered: {error_count} ({error_rate*100:.1f}% error rate)")
             
             if result.get('matched_file'):
                 logger.info(f"📄 Matched restaurants: {result['matched_file']}")

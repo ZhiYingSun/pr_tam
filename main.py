@@ -25,6 +25,7 @@ sys.path.insert(0, str(project_root))
 from src.pipelines.orchestrator import PipelineOrchestrator
 from src.data.models import MatchingConfig
 from src.searchers.async_searcher import AsyncIncorporationSearcher
+from src.clients.openai_client import OpenAIClient
 
 # Configure logging
 logs_dir = project_root / "logs"
@@ -122,12 +123,14 @@ Examples:
     if not zyte_api_key:
         logger.error("ZYTE_API_KEY not found in environment.")
         sys.exit(1)
-
+    
+    # Create singleton clients (rate limited)
+    openai_client = OpenAIClient(api_key=openai_api_key)
     searcher = AsyncIncorporationSearcher(zyte_api_key, max_concurrent=args.max_concurrent)
-
+ 
     try:
         orchestrator = PipelineOrchestrator(
-            openai_api_key=openai_api_key,
+            openai_client=openai_client,
             searcher=searcher,
             config=config,
             skip_transformation=args.skip_transformation

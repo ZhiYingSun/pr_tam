@@ -1,42 +1,42 @@
 """
-LLM Validator
+LLM Validator - Business logic for validating matches using LLM.
+Uses OpenAIClient via dependency injection. Rate limiting handled by OpenAIClient.
 """
-import asyncio
 import logging
 import json
 from typing import List, Dict, Optional, Tuple, Any
-from pydantic import BaseModel
-from openai import AsyncOpenAI
+from pydantic import ValidationError
 from openai import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from src.data.models import MatchResult, MatchingConfig
+from src.data.models import MatchResult, MatchingConfig, OpenAIValidationResponse, ValidationResult
+from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
-
-
-class ValidationResult(BaseModel):
-    """Represents the result of an LLM validation for a single match."""
-    restaurant_name: str
-    business_legal_name: str
-    rapidfuzz_confidence_score: float
-    openai_match_score: Optional[int] = None
-    openai_confidence: Optional[str] = None
-    openai_recommendation: Optional[str] = None
-    openai_reasoning: Optional[str] = None
-    openai_raw_response: Optional[str] = None
-    final_status: str = "pending" # accept, reject, manual_review
 
 class LLMValidator:
     """
     Validates restaurant-business matches using OpenAI's language model.
+    Uses OpenAIClient via dependency injection for making API calls.
     """
-    def __init__(self, api_key: str, model: str = "gpt-3.5-turbo", temperature: float = 0.2, max_concurrent_calls: int = 5):
-        self.client = AsyncOpenAI(api_key=api_key)
+    def __init__(
+        self,
+        openai_client: OpenAIClient,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.2
+    ):
+        """
+        Initialize LLM validator.
+        
+        Args:
+            openai_client: OpenAIClient instance (dependency injection)
+            model: Model name (default: gpt-4o-mini)
+            temperature: Sampling temperature
+        """
+        self.openai_client = openai_client
         self.model = model
         self.temperature = temperature
-        self.semaphore = asyncio.Semaphore(max_concurrent_calls)
-        logger.info(f"Initialized OpenAI validator with model: {self.model}")
+        logger.info(f"Initialized LLM validator with model: {self.model}")
 
     def _construct_prompt(self, match: MatchResult) -> str:
         """Constructs the prompt for OpenAI based on the match details."""
@@ -96,10 +96,15 @@ Example JSON Output:
         wait=wait_exponential(multiplier=1, min=4, max=10),
         retry=retry_if_exception_type(APIStatusError)
     )
-    async def _call_openai_api(self, prompt: str) -> Optional[Dict]:
-        """Makes an asynchronous call to the OpenAI API."""
+    async def _call_openai_api(self, prompt: str) -> Optional[OpenAIValidationResponse]:
+        """
+        Makes an asynchronous call to the OpenAI API via OpenAIClient.
+        
+        Returns:
+            OpenAIValidationResponse if successful, None on error
+        """
         try:
-            response = await self.client.chat.completions.create(
+            response_dict = await self.openai_client.chat_completion(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
@@ -109,54 +114,57 @@ Example JSON Output:
                 response_format={"type": "json_object"}
             )
             
-            content = response.choices[0].message.content
-            return json.loads(content)
+            if not response_dict:
+                return None
+            
+            try:
+                return OpenAIValidationResponse(**response_dict)
+            except ValidationError as e:
+                logger.error(f"Failed to validate OpenAI response structure: {e}. Response: {response_dict}")
+                return None
+            
         except APIStatusError as e:
             logger.error(f"OpenAI API error (status {e.status_code}): {e.response}")
             raise  # Re-raise to trigger retry
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to decode JSON from OpenAI response: {e}. Raw content: {content[:500]}...")
-            return None
         except Exception as e:
             logger.error(f"An unexpected error occurred during OpenAI API call: {e}")
             return None
 
     async def validate_match(self, match: MatchResult) -> ValidationResult:
-        """Validates a single match using OpenAI."""
-        async with self.semaphore:
-            if not match.business:
-                logger.warning(f"Skipping OpenAI validation for '{match.restaurant.name}' due to missing business record.")
-                return ValidationResult(
-                    restaurant_name=match.restaurant.name,
-                    business_legal_name="",
-                    rapidfuzz_confidence_score=match.confidence_score,
-                    openai_recommendation="reject",
-                    openai_reasoning="No business record available for validation.",
-                    final_status="reject"
-                )
-
-            prompt = self._construct_prompt(match)
-            openai_response = await self._call_openai_api(prompt)
-
-            validation_result = ValidationResult(
+        """Validates a single match using OpenAI. Rate limiting handled by OpenAIClient."""
+        if not match.business:
+            logger.warning(f"Skipping OpenAI validation for '{match.restaurant.name}' due to missing business record.")
+            return ValidationResult(
                 restaurant_name=match.restaurant.name,
-                business_legal_name=match.business.legal_name,
+                business_legal_name="",
                 rapidfuzz_confidence_score=match.confidence_score,
-                openai_raw_response=json.dumps(openai_response) if openai_response else None
+                openai_recommendation="reject",
+                openai_reasoning="No business record available for validation.",
+                final_status="reject"
             )
 
-            if openai_response:
-                validation_result.openai_match_score = openai_response.get("match_score")
-                validation_result.openai_confidence = openai_response.get("confidence")
-                validation_result.openai_recommendation = openai_response.get("recommendation")
-                validation_result.openai_reasoning = openai_response.get("reasoning")
-                validation_result.final_status = openai_response.get("recommendation", "manual_review")
-            else:
-                validation_result.openai_recommendation = "manual_review"
-                validation_result.openai_reasoning = "OpenAI response invalid or failed."
-                validation_result.final_status = "manual_review"
+        prompt = self._construct_prompt(match)
+        openai_response = await self._call_openai_api(prompt)
 
-            return validation_result
+        validation_result = ValidationResult(
+            restaurant_name=match.restaurant.name,
+            business_legal_name=match.business.legal_name,
+            rapidfuzz_confidence_score=match.confidence_score,
+            openai_raw_response=openai_response.model_dump_json() if openai_response else None
+        )
+
+        if openai_response:
+            validation_result.openai_match_score = openai_response.match_score
+            validation_result.openai_confidence = openai_response.confidence
+            validation_result.openai_recommendation = openai_response.recommendation
+            validation_result.openai_reasoning = openai_response.reasoning
+            validation_result.final_status = openai_response.recommendation
+        else:
+            validation_result.openai_recommendation = "manual_review"
+            validation_result.openai_reasoning = "OpenAI response invalid or failed."
+            validation_result.final_status = "manual_review"
+
+        return validation_result
 
     async def validate_matches_batch(self, matches: List[MatchResult], batch_size: int = 10) -> List[ValidationResult]:
         """Validates a list of matches in batches."""

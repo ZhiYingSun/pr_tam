@@ -25,3 +25,6 @@ loguru>=0.7.0
 # Testing (optional)
 pytest>=7.4.0
 pytest-cov>=4.1.0
+
+# Rate limiting
+aiolimiter>=1.1.0

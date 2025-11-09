@@ -7,11 +7,12 @@ from datetime import datetime
 
 from src.utils.loader import load_restaurants
 from src.utils.output import generate_all_outputs, get_match_statistics
-from src.data.models import MatchingConfig, RestaurantRecord, MatchResult
+from src.data.models import MatchingConfig, RestaurantRecord, MatchResult, ValidationResult
 from src.matchers.async_matcher import AsyncRestaurantMatcher
 from src.searchers.async_searcher import AsyncIncorporationSearcher
-from src.validators.llm_validator import LLMValidator, ValidationResult
+from src.validators.llm_validator import LLMValidator
 from src.pipelines.transformation_pipeline import TransformationPipeline
+from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +22,7 @@ class PipelineOrchestrator:
     
     def __init__(
         self,
-        openai_api_key: str,
+        openai_client: OpenAIClient,
         searcher: AsyncIncorporationSearcher,
         config: Optional[MatchingConfig] = None,
         skip_transformation: bool = False
@@ -30,7 +31,7 @@ class PipelineOrchestrator:
         Initialize the pipeline orchestrator.
         
         Args:
-            openai_api_key: OpenAI API key for validation
+            openai_client: OpenAIClient instance (dependency injection)
             searcher: AsyncIncorporationSearcher instance
             config: Optional matching configuration
             skip_transformation: Whether to skip data transformation step
@@ -40,9 +41,8 @@ class PipelineOrchestrator:
         self.skip_transformation = skip_transformation
 
         self.validator = LLMValidator(
-            api_key=openai_api_key,
-            model="gpt-4o-mini",
-            max_concurrent_calls=5
+            openai_client=openai_client,
+            model="gpt-4o-mini"
         )
         
         if not skip_transformation:

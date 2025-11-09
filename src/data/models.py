@@ -4,11 +4,8 @@ Core domain models for Puerto Rico Restaurant Matcher.
 from __future__ import annotations
 
 import pandas as pd
-from typing import Optional, Tuple, TYPE_CHECKING
+from typing import Optional, Tuple
 from pydantic import BaseModel
-
-if TYPE_CHECKING:
-    from src.data.api_models import CorporationDetail
 
 
 class BusinessRecord(BaseModel):

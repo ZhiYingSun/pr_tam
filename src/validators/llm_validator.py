@@ -4,8 +4,8 @@ Uses OpenAIClient via dependency injection. Rate limiting handled by OpenAIClien
 """
 import logging
 import json
-from typing import List, Dict, Optional, Tuple, Any
-from pydantic import BaseModel
+from typing import List, Dict, Optional, Tuple, Any, Literal
+from pydantic import BaseModel, Field, ValidationError
 from openai import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
@@ -13,6 +13,14 @@ from src.data.models import MatchResult, MatchingConfig
 from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
+
+
+class OpenAIValidationResponse(BaseModel):
+    """Typed response from OpenAI validation API."""
+    match_score: int = Field(..., ge=0, le=100, description="Match score from 0 to 100")
+    confidence: Literal["high", "medium", "low"] = Field(..., description="Confidence level")
+    recommendation: Literal["accept", "reject", "manual_review"] = Field(..., description="Recommendation")
+    reasoning: str = Field(..., description="Explanation of the decision")
 
 
 class ValidationResult(BaseModel):
@@ -109,10 +117,15 @@ Example JSON Output:
         wait=wait_exponential(multiplier=1, min=4, max=10),
         retry=retry_if_exception_type(APIStatusError)
     )
-    async def _call_openai_api(self, prompt: str) -> Optional[Dict]:
-        """Makes an asynchronous call to the OpenAI API via OpenAIClient."""
+    async def _call_openai_api(self, prompt: str) -> Optional[OpenAIValidationResponse]:
+        """
+        Makes an asynchronous call to the OpenAI API via OpenAIClient.
+        
+        Returns:
+            OpenAIValidationResponse if successful, None on error
+        """
         try:
-            response = await self.openai_client.chat_completion(
+            response_dict = await self.openai_client.chat_completion(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
@@ -122,7 +135,16 @@ Example JSON Output:
                 response_format={"type": "json_object"}
             )
             
-            return response
+            if not response_dict:
+                return None
+            
+            # Parse and validate the response with Pydantic
+            try:
+                return OpenAIValidationResponse(**response_dict)
+            except ValidationError as e:
+                logger.error(f"Failed to validate OpenAI response structure: {e}. Response: {response_dict}")
+                return None
+            
         except APIStatusError as e:
             logger.error(f"OpenAI API error (status {e.status_code}): {e.response}")
             raise  # Re-raise to trigger retry
@@ -150,15 +172,15 @@ Example JSON Output:
             restaurant_name=match.restaurant.name,
             business_legal_name=match.business.legal_name,
             rapidfuzz_confidence_score=match.confidence_score,
-            openai_raw_response=json.dumps(openai_response) if openai_response else None
+            openai_raw_response=openai_response.model_dump_json() if openai_response else None
         )
 
         if openai_response:
-            validation_result.openai_match_score = openai_response.get("match_score")
-            validation_result.openai_confidence = openai_response.get("confidence")
-            validation_result.openai_recommendation = openai_response.get("recommendation")
-            validation_result.openai_reasoning = openai_response.get("reasoning")
-            validation_result.final_status = openai_response.get("recommendation", "manual_review")
+            validation_result.openai_match_score = openai_response.match_score
+            validation_result.openai_confidence = openai_response.confidence
+            validation_result.openai_recommendation = openai_response.recommendation
+            validation_result.openai_reasoning = openai_response.reasoning
+            validation_result.final_status = openai_response.recommendation
         else:
             validation_result.openai_recommendation = "manual_review"
             validation_result.openai_reasoning = "OpenAI response invalid or failed."

@@ -210,32 +210,3 @@ Example JSON Output:
         logger.info(f"Completed batch validation: {len(all_validation_results)} results")
         return all_validation_results
 
-
-def create_validation_summary(validation_results: List[ValidationResult]) -> Dict[str, Any]:
-    """Generates a summary of the validation results."""
-    total_validated = len(validation_results)
-    accepted = [r for r in validation_results if r.openai_recommendation == "accept"]
-    rejected = [r for r in validation_results if r.openai_recommendation == "reject"]
-    manual_review = [r for r in validation_results if r.openai_recommendation == "manual_review"]
-
-    avg_openai_score = sum([r.openai_match_score for r in validation_results if r.openai_match_score is not None]) / len([r for r in validation_results if r.openai_match_score is not None]) if [r for r in validation_results if r.openai_match_score is not None] else 0
-    avg_rapidfuzz_score = sum([r.rapidfuzz_confidence_score for r in validation_results]) / total_validated if total_validated else 0
-
-    return {
-        "total_validated": total_validated,
-        "accepted_count": len(accepted),
-        "rejected_count": len(rejected),
-        "manual_review_count": len(manual_review),
-        "accepted_percentage": (len(accepted) / total_validated * 100) if total_validated else 0,
-        "rejected_percentage": (len(rejected) / total_validated * 100) if total_validated else 0,
-        "manual_review_percentage": (len(manual_review) / total_validated * 100) if total_validated else 0,
-        "avg_openai_score": avg_openai_score,
-        "avg_rapidfuzz_score": avg_rapidfuzz_score,
-        "high_confidence_openai": len([r for r in validation_results if r.openai_confidence == "high"]),
-        "medium_confidence_openai": len([r for r in validation_results if r.openai_confidence == "medium"]),
-        "low_confidence_openai": len([r for r in validation_results if r.openai_confidence == "low"]),
-        "sample_accepts": accepted[:2],
-        "sample_rejects": rejected[:2],
-        "sample_manual_reviews": manual_review[:2]
-    }
-

@@ -234,78 +234,6 @@ def create_restaurant_from_csv_row(row: dict) -> RestaurantRecord:
     )
 
 
-def create_business_from_api_response(response_data: dict) -> BusinessRecord:
-    """Convert API response data to a BusinessRecord"""
-    # Handle nested response structure
-    actual_response = response_data.get('response', response_data)
-    
-    corporation = actual_response.get('corporation', {})
-    corp_street_address = actual_response.get('corpStreetAddress', {})
-    resident_agent = actual_response.get('residentAgent', {})
-    
-    # Extract legal name
-    legal_name = corporation.get('corpName', '')
-    
-    # Extract registration number
-    registration_number = corporation.get('corpRegisterNumber', '')
-    
-    # Extract street address
-    street_address_parts = []
-    if corp_street_address.get('address1'):
-        street_address_parts.append(corp_street_address['address1'])
-    if corp_street_address.get('address2'):
-        street_address_parts.append(corp_street_address['address2'])
-    
-    # Build full address string
-    address_parts = []
-    if street_address_parts:
-        address_parts.append(', '.join(street_address_parts))
-    if corp_street_address.get('city'):
-        address_parts.append(corp_street_address['city'])
-    if corp_street_address.get('zip'):
-        address_parts.append(corp_street_address['zip'])
-    
-    business_address = ', '.join(address_parts)
-    
-    # Extract status
-    status = corporation.get('statusEn', '')
-    
-    # Extract resident agent name
-    resident_agent_name = ''
-    if resident_agent.get('individualName'):
-        individual_name = resident_agent['individualName']
-        name_parts = []
-        if individual_name.get('firstName'):
-            name_parts.append(individual_name['firstName'])
-        if individual_name.get('middleName'):
-            name_parts.append(individual_name['middleName'])
-        if individual_name.get('lastName'):
-            name_parts.append(individual_name['lastName'])
-        if individual_name.get('surName'):
-            name_parts.append(individual_name['surName'])
-        resident_agent_name = ' '.join(name_parts)
-    
-    # Extract resident agent address
-    resident_agent_address = ''
-    if resident_agent.get('streetAddress'):
-        agent_addr = resident_agent['streetAddress']
-        agent_addr_parts = []
-        if agent_addr.get('address1'):
-            agent_addr_parts.append(agent_addr['address1'])
-        if agent_addr.get('address2'):
-            agent_addr_parts.append(agent_addr['address2'])
-        resident_agent_address = ', '.join(agent_addr_parts)
-    
-    return BusinessRecord(
-        legal_name=legal_name,
-        registration_number=str(registration_number),
-        business_address=business_address,
-        status=status,
-        resident_agent_name=resident_agent_name,
-        resident_agent_address=resident_agent_address
-    )
-
-
 def determine_match_type(confidence_score: float) -> str:
     """Determine match type based on confidence score"""
     if confidence_score >= MatchingConfig.HIGH_CONFIDENCE_THRESHOLD:
@@ -315,7 +243,3 @@ def determine_match_type(confidence_score: float) -> str:
     else:
         return "low"
 
-
-def is_match_accepted(confidence_score: float) -> bool:
-    """Determine if a match should be accepted based on confidence score"""
-    return confidence_score >= MatchingConfig.NAME_MATCH_THRESHOLD

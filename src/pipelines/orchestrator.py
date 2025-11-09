@@ -9,7 +9,7 @@ from src.utils.loader import load_restaurants
 from src.utils.output import generate_all_outputs, get_match_statistics
 from src.data.models import MatchingConfig, RestaurantRecord, MatchResult
 from src.matchers.async_matcher import AsyncRestaurantMatcher
-from src.searchers.async_searcher import AsyncIncorporationSearcher, AsyncMockIncorporationSearcher
+from src.searchers.async_searcher import AsyncIncorporationSearcher
 from src.validators.llm_validator import LLMValidator, ValidationResult
 from src.pipelines.transformation_pipeline import TransformationPipeline
 
@@ -22,12 +22,21 @@ class PipelineOrchestrator:
     def __init__(
         self,
         openai_api_key: str,
+        searcher: AsyncIncorporationSearcher,
         config: Optional[MatchingConfig] = None,
-        use_mock: bool = False,
         skip_transformation: bool = False
     ):
+        """
+        Initialize the pipeline orchestrator.
+        
+        Args:
+            openai_api_key: OpenAI API key for validation
+            searcher: AsyncIncorporationSearcher instance
+            config: Optional matching configuration
+            skip_transformation: Whether to skip data transformation step
+        """
         self.config = config or MatchingConfig()
-        self.use_mock = use_mock
+        self.searcher = searcher
         self.skip_transformation = skip_transformation
 
         self.validator = LLMValidator(
@@ -104,18 +113,9 @@ class PipelineOrchestrator:
         logger.info("Loading restaurants...")
         restaurants = load_restaurants(input_csv, limit=limit)
         logger.info(f"Loaded {len(restaurants)} restaurants")
-        
-        # Initialize shared searcher and matcher
-        if self.use_mock:
-            searcher = AsyncMockIncorporationSearcher()
-        else:
-            zyte_api_key = os.getenv("ZYTE_API_KEY")
-            if not zyte_api_key:
-                raise ValueError("ZYTE_API_KEY environment variable not set")
-            searcher = AsyncIncorporationSearcher(zyte_api_key, max_concurrent=max_concurrent)
-        
-        async with searcher:
-            matcher = AsyncRestaurantMatcher(searcher, max_concurrent=max_concurrent)
+
+        async with self.searcher:
+            matcher = AsyncRestaurantMatcher(self.searcher, max_concurrent=max_concurrent)
 
             logger.info(f"Processing {len(restaurants)} restaurants concurrently...")
             tasks = [self.run_restaurant(restaurant, matcher) for restaurant in restaurants]
@@ -218,7 +218,6 @@ class PipelineOrchestrator:
         if limit:
             logger.info(f"  Limit: {limit} restaurants")
         logger.info(f"  Max concurrent: {max_concurrent}")
-        logger.info(f"  Use mock: {self.use_mock}")
         logger.info(f"  Validation: enabled")
         logger.info(f"  Skip transformation: {self.skip_transformation}")
         logger.info("=" * 80)

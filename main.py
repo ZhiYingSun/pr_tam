@@ -24,6 +24,7 @@ sys.path.insert(0, str(project_root))
 
 from src.pipelines.orchestrator import PipelineOrchestrator
 from src.data.models import MatchingConfig
+from src.searchers.async_searcher import AsyncIncorporationSearcher
 
 # Configure logging
 logs_dir = project_root / "logs"
@@ -47,17 +48,14 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Quick test with 5 restaurants (mock data)
-  python main.py --limit 5 --mock
-  
   # Production run with 50 restaurants
   python main.py --limit 50 --max-concurrent 20
   
   # Full pipeline with all steps
   python main.py --limit 500 --max-concurrent 20
   
-  # Skip validation for faster testing
-  python main.py --limit 100
+  # Skip transformation for faster testing
+  python main.py --limit 100 --skip-transformation
         """
     )
     
@@ -90,11 +88,6 @@ Examples:
         help='Name match threshold percentage (default: 70.0)'
     )
     parser.add_argument(
-        '--mock', '-m',
-        action='store_true',
-        help='Use mock searcher for testing (no API calls)'
-    )
-    parser.add_argument(
         '--skip-transformation',
         action='store_true',
         help='Skip data transformation step'
@@ -119,17 +112,24 @@ Examples:
         logger.error(f"Input file not found: {input_path}")
         sys.exit(1)
 
+    # Validate API keys
     openai_api_key = os.getenv("OPENAI_API_KEY")
     if not openai_api_key:
         logger.error("OPENAI_API_KEY not found in environment. Validation is required.")
         sys.exit(1)
     
-    # Initialize orchestrator
+    zyte_api_key = os.getenv("ZYTE_API_KEY")
+    if not zyte_api_key:
+        logger.error("ZYTE_API_KEY not found in environment.")
+        sys.exit(1)
+
+    searcher = AsyncIncorporationSearcher(zyte_api_key, max_concurrent=args.max_concurrent)
+
     try:
         orchestrator = PipelineOrchestrator(
             openai_api_key=openai_api_key,
+            searcher=searcher,
             config=config,
-            use_mock=args.mock,
             skip_transformation=args.skip_transformation
         )
     except Exception as e:

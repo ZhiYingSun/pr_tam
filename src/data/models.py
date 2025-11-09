@@ -55,7 +55,7 @@ class RestaurantRecord(BaseModel):
 class MatchResult(BaseModel):
     """Represents the result of matching a restaurant with a business record"""
     restaurant: RestaurantRecord
-    business: BusinessRecord
+    business: Optional[BusinessRecord] = None
     confidence_score: float
     match_type: str
     is_accepted: bool

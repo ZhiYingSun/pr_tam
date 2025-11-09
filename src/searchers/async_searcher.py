@@ -34,8 +34,8 @@ class AsyncIncorporationSearcher:
         return self
     
     async def __aexit__(self, exc_type, exc_val, exc_tb):
-        """Async context manager exit - ZyteClient manages its own session lifecycle."""
-        pass
+        """Async context manager exit - close ZyteClient session."""
+        await self.zyte_client.close()
     
     async def search_business_async(self, business_name: str, limit: int = 5) -> List[BusinessRecord]:
         """Search for business by name using reverse engineered PR incorporation API."""

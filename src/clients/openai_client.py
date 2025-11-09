@@ -1,6 +1,5 @@
 """
-OpenAI API client - Singleton async client with rate limiting.
-Pure HTTP client with no business logic.
+OpenAI API client
 """
 import os
 import json
@@ -15,8 +14,7 @@ logger = logging.getLogger(__name__)
 
 class OpenAIClient:
     """
-    Singleton async OpenAI API client with rate limiting.
-    Pure HTTP client - no business logic, just makes requests.
+    Singleton async OpenAI API client with rate limiting and no business logic.
     """
     _instance = None
     _initialized = False

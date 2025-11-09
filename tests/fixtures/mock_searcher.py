@@ -7,7 +7,7 @@ import re
 import logging
 from typing import List
 
-from src.data.models import BusinessRecord
+from src.models.models import BusinessRecord
 
 logger = logging.getLogger(__name__)
 

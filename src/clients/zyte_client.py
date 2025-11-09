@@ -1,5 +1,5 @@
 """
-Zyte API client - Singleton async client for making requests through Zyte
+Zyte API client
 """
 import os
 import json
@@ -9,7 +9,7 @@ import aiohttp
 from aiohttp import ClientSession, ClientTimeout, BasicAuth
 from aiolimiter import AsyncLimiter
 
-from src.data.api_models import ZyteHttpResponse
+from src.models.api_models import ZyteHttpResponse
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,6 @@ logger = logging.getLogger(__name__)
 class ZyteClient:
     """
     Singleton async Zyte API client with connection pooling.
-    Ensures all instances share the same connection pool for efficiency.
     """
     _instance = None
     _initialized = False

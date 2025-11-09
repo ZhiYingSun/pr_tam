@@ -1,22 +1,20 @@
-import os
 import logging
 import asyncio
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple
-from datetime import datetime
+from typing import Optional, Dict, List, Tuple, Union
+from datetime import datetime, timedelta
 
 from src.utils.loader import RestaurantLoader, CSVRestaurantLoader
-from src.utils.output import generate_all_outputs, get_match_statistics
-from src.data.models import MatchingConfig, RestaurantRecord, MatchResult
-from src.data.validation_models import ValidationResult
+from src.utils.intermediate_match_csv_generator import generate_all_outputs, print_match_statistics
+from src.models.models import MatchingConfig, RestaurantRecord, MatchResult, PipelineResult
+from src.models.validation_models import ValidationResult
 from src.matchers.matcher import RestaurantMatcher
 from src.searchers.searcher import IncorporationSearcher
 from src.validators.llm_validator import LLMValidator
-from src.pipelines.transformation_pipeline import TransformationPipeline
+from src.utils.final_customer_facing_report_generator import FinalCustomerFacingReportGenerator
 from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
-
 
 class PipelineOrchestrator:
     """Orchestrates the complete pipeline execution."""
@@ -25,45 +23,37 @@ class PipelineOrchestrator:
         self,
         openai_client: OpenAIClient,
         searcher: IncorporationSearcher,
-        config: Optional[MatchingConfig] = None,
-        skip_transformation: bool = False,
-        loader: Optional[RestaurantLoader] = None
+        config: MatchingConfig,
+        loader: RestaurantLoader,
+        transformation_pipeline: FinalCustomerFacingReportGenerator
     ):
         """
         Initialize the pipeline orchestrator.
         
         Args:
-            openai_client: OpenAIClient instance (dependency injection)
+            openai_client: OpenAIClient instance
             searcher: IncorporationSearcher instance
-            config: Optional matching configuration
-            skip_transformation: Whether to skip data transformation step
-            loader: RestaurantLoader instance (defaults to CSVRestaurantLoader)
+            config: Matching configuration
+            loader: RestaurantLoader instance
+            transformation_pipeline: FinalCustomerFacingReportGenerator instance
         """
-        self.config = config or MatchingConfig()
+        self.config = config
         self.searcher = searcher
-        self.skip_transformation = skip_transformation
-        self.loader = loader or CSVRestaurantLoader()
+        self.loader = loader
+        self.transformation_pipeline = transformation_pipeline
 
         self.validator = LLMValidator(
             openai_client=openai_client,
             model="gpt-4o-mini"
         )
-        
-        if not skip_transformation:
-            self.transformation_pipeline = TransformationPipeline()
-        else:
-            self.transformation_pipeline = None
 
-    async def run_restaurant(
+    async def process_restaurant(
         self,
         restaurant: RestaurantRecord,
         matcher: RestaurantMatcher
     ) -> Tuple[Optional[MatchResult], Optional[ValidationResult]]:
         """
         Process a single restaurant through the full match → validate pipeline.
-
-        Runs for one restaurant, but multiple tasks execute concurrently via asyncio.gather().
-        All tasks share the same matcher, connection pool (ZyteClient), and rate limiter (matcher.max_concurrent).
 
         Args:
         restaurant: RestaurantRecord to process.
@@ -93,24 +83,21 @@ class PipelineOrchestrator:
         self,
         input_csv: str,
         output_dir: str = "data/output",
-        limit: Optional[int] = None,
-        max_concurrent: int = 20
-    ) -> Dict:
+        limit: Optional[int] = None
+    ) -> PipelineResult:
         """
         Run the complete pipeline for all restaurants.
-        Uses asyncio.gather at the root to process all restaurants concurrently.
         
         Args:
             input_csv: Path to input CSV file
             output_dir: Output directory for results
             limit: Optional limit on number of restaurants to process
-            max_concurrent: Maximum concurrent API calls
             
         Returns:
             Dictionary with complete pipeline results
         """
         timestamp, output_path, start_time = self._initialize_pipeline_run(
-            input_csv, output_dir, limit, max_concurrent
+            input_csv, output_dir, limit
         )
         
         # Load restaurants
@@ -119,13 +106,61 @@ class PipelineOrchestrator:
         logger.info(f"Loaded {len(restaurants)} restaurants")
 
         async with self.searcher:
-            matcher = RestaurantMatcher(self.searcher, max_concurrent=max_concurrent)
+            matcher = RestaurantMatcher(self.searcher)
 
             logger.info(f"Processing {len(restaurants)} restaurants concurrently...")
-            tasks = [self.run_restaurant(restaurant, matcher) for restaurant in restaurants]
+            tasks = [self.process_restaurant(restaurant, matcher) for restaurant in restaurants]
             restaurant_results = await asyncio.gather(*tasks, return_exceptions=True)
         
         # Process results and handle exceptions
+        match_results, validation_results, error_count, error_rate = self._process_restaurant_results(
+            restaurant_results, restaurants
+        )
+        
+        # Generate output files
+        output_files = generate_all_outputs(match_results, str(output_path))
+        
+        # Calculate and print statistics
+        statistics = print_match_statistics(match_results)
+
+        # Save validation results if available
+        if validation_results:
+            validation_file = self._save_validation_results(validation_results, output_path)
+        else:
+            validation_file = None
+        
+        # Transformation
+        if match_results:
+            final_output = self._run_transformation(
+                output_path, timestamp, validation_file
+            )
+        else:
+            final_output = None
+        
+        duration = self._log_pipeline_completion(start_time)
+        
+        return PipelineResult(
+            success=error_rate < 0.5,  # Success only if error rate below threshold
+            error_count=error_count,
+            error_rate=error_rate,
+            timestamp=timestamp,
+            input_csv=input_csv,
+            output_dir=str(output_path),
+            results=match_results,
+            validation_results=validation_results,
+            statistics=statistics,
+            output_files=output_files,
+            matched_file=str(output_path / "matched_restaurants.csv") if match_results else None,
+            validation_file=validation_file,
+            final_output=final_output,
+            duration=duration
+        )
+    
+    def _process_restaurant_results(
+        self,
+        restaurant_results: List[Union[Tuple[Optional[MatchResult], Optional[ValidationResult]], Exception]],
+        restaurants: List[RestaurantRecord]
+    ) -> Tuple[List[MatchResult], List[ValidationResult], int, float]:
         match_results = []
         validation_results = []
         error_count = 0
@@ -159,52 +194,30 @@ class PipelineOrchestrator:
         logger.info(f"   Matches found: {len(match_results)}")
         logger.info(f"   Validated: {len(validation_results)}")
         
-        # Generate output files
-        logger.info("Generating output files...")
-        output_files = generate_all_outputs(match_results, str(output_path))
+        return match_results, validation_results, error_count, error_rate
+    
+    def _log_pipeline_completion(self, start_time: datetime) -> timedelta:
+        """
+        Log pipeline completion with duration.
         
-        # Calculate statistics
-        statistics = get_match_statistics(match_results)
-        logger.info(f"Match rate: {statistics['match_rate']:.1f}%")
-        logger.info(f"Average confidence: {statistics['avg_confidence_score']:.1f}%")
-        
-        # Save validation results if available
-        validation_file = self._save_validation_results(validation_results, output_path) if validation_results else None
-        
-        # Transformation (if enabled)
-        final_output = self._run_transformation(
-            output_path, timestamp, validation_file
-        ) if not self.skip_transformation and match_results else None
-        
+        Args:
+            start_time: Pipeline start time
+            
+        Returns:
+            Duration as timedelta
+        """
         duration = datetime.now() - start_time
         logger.info("\n" + "=" * 80)
         logger.info("PIPELINE COMPLETED")
         logger.info(f"Duration: {duration}")
         logger.info("=" * 80)
-        
-        return {
-            'success': error_rate < 0.5,  # Success only if error rate below threshold
-            'error_count': error_count,
-            'error_rate': error_rate,
-            'timestamp': timestamp,
-            'input_csv': input_csv,
-            'output_dir': str(output_path),
-            'results': match_results,
-            'validation_results': validation_results,
-            'statistics': statistics,
-            'output_files': output_files,
-            'matched_file': str(output_path / "matched_restaurants.csv") if match_results else None,
-            'validation_file': validation_file,
-            'final_output': final_output,
-            'duration': duration
-        }
+        return duration
     
     def _initialize_pipeline_run(
         self,
         input_csv: str,
         output_dir: str,
-        limit: Optional[int],
-        max_concurrent: int
+        limit: Optional[int]
     ) -> Tuple[str, Path, datetime]:
         """
         Initialize pipeline run: setup paths, timestamps, and log configuration.
@@ -213,7 +226,6 @@ class PipelineOrchestrator:
             input_csv: Path to input CSV file
             output_dir: Output directory for results
             limit: Optional limit on number of restaurants
-            max_concurrent: Maximum concurrent API calls
             
         Returns:
             Tuple of (timestamp, output_path, start_time)
@@ -231,9 +243,8 @@ class PipelineOrchestrator:
         logger.info(f"  Output: {output_dir}")
         if limit:
             logger.info(f"  Limit: {limit} restaurants")
-        logger.info(f"  Max concurrent: {max_concurrent}")
         logger.info(f"  Validation: enabled")
-        logger.info(f"  Skip transformation: {self.skip_transformation}")
+        logger.info(f"  Transformation: enabled")
         logger.info("=" * 80)
         
         return timestamp, output_path, start_time
@@ -268,7 +279,7 @@ class PipelineOrchestrator:
         timestamp: str,
         validation_file: Optional[str]
     ) -> Optional[str]:
-        """Run transformation pipeline if enabled."""
+        """Run transformation pipeline."""
         if not self.transformation_pipeline:
             return None
         
@@ -284,7 +295,7 @@ class PipelineOrchestrator:
         )
         
         if transform_result.get('success'):
-            logger.info(f"✅ Transformation completed: {final_output_path}")
+            logger.info(f"Transformation completed: {final_output_path}")
             return str(final_output_path)
         
         return None

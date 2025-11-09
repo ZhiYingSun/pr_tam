@@ -6,7 +6,7 @@ import logging
 import asyncio
 from typing import List, Optional, Tuple
 from rapidfuzz import fuzz
-from src.data.models import RestaurantRecord, BusinessRecord, MatchResult, MatchingConfig, determine_match_type
+from src.models.models import RestaurantRecord, BusinessRecord, MatchResult, MatchingConfig, determine_match_type
 
 logger = logging.getLogger(__name__)
 
@@ -16,17 +16,14 @@ class RestaurantMatcher:
     Matcher for restaurant records.
     """
     
-    def __init__(self, incorporation_searcher, max_concurrent: int = 20):
+    def __init__(self, incorporation_searcher):
         """
         Initialize restaurant matcher.
         
         Args:
             incorporation_searcher: IncorporationSearcher instance
-            max_concurrent: Deprecated - kept for compatibility but not used.
-                           Rate limiting is handled by ZyteClient.
         """
         self.incorporation_searcher = incorporation_searcher
-        self.max_concurrent = max_concurrent  # Kept for compatibility
 
     def _normalize_name(self, name: str) -> str:
         """
@@ -195,7 +192,7 @@ class RestaurantMatcher:
         Processes a list of restaurant records concurrently and attempts to find matches for each.
         Rate limiting handled by ZyteClient.
         """
-        logger.info(f"Starting matching for {len(restaurants)} restaurants with max_concurrent={self.max_concurrent}")
+        logger.info(f"Starting matching for {len(restaurants)} restaurants")
         
         # Create tasks for all restaurants
         tasks = [self.find_best_match(restaurant) for restaurant in restaurants]

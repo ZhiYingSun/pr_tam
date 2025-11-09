@@ -1,5 +1,5 @@
 """
-Puerto Rico incorporation documents API client with connection pooling
+Puerto Rico incorporation documents API client
 """
 import json
 import logging
@@ -7,26 +7,30 @@ import asyncio
 import re
 from typing import Dict, List, Any, Optional
 
-from src.data.models import BusinessRecord
-from src.data.api_models import (
+from src.models.models import BusinessRecord
+from src.models.api_models import (
     CorporationSearchResponse,
     CorporationDetailResponse,
     CorporationDetailResponseData,
     CorporationSearchRecord,
 )
-from src.searchers.zyte_client import ZyteClient
+from src.clients.zyte_client import ZyteClient
 from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
 
 
 class IncorporationSearcher:
+    BASE_URL = "https://rceapi.estado.pr.gov/api"
 
-    def __init__(self, zyte_api_key: str, max_concurrent: int = 20):
+    def __init__(self, zyte_api_key: str):
         self.zyte_api_key = zyte_api_key
-        self.max_concurrent = max_concurrent
         self.zyte_client = ZyteClient(zyte_api_key)
-        self.search_url = "https://rceapi.estado.pr.gov/api/corporation/search"
+        self.search_url = f"{self.BASE_URL}/corporation/search"
+    
+    def get_detail_url(self, registration_index: str) -> str:
+        """Build corporation detail URL from registration index."""
+        return f"{self.BASE_URL}/corporation/info/{registration_index}"
         
     async def __aenter__(self):
         """Async context manager entry - initialize ZyteClient."""
@@ -128,16 +132,12 @@ class IncorporationSearcher:
     
     async def _get_business_details(self, business_entity_id: int, registration_index: str = None) -> Optional[CorporationDetailResponseData]:
         try:
-            # Try different URL patterns based on what we have available
-            url = f"https://rceapi.estado.pr.gov/api/corporation/info/{registration_index}"
-
-            
+            url = self.get_detail_url(registration_index)
             headers = {
                 'Accept': 'application/json, text/plain, */*',
                 'Origin': 'https://rcp.estado.pr.gov',
                 'Authorization': 'null'
             }
-            
 
             logger.debug(f"Trying detail URL with registrationIndex: {url}")
             response = await self._make_corporation_detail_get_request(url, headers)

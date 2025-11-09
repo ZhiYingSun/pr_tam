@@ -1,3 +1,8 @@
+"""
+Final customer-facing report generator for Puerto Rico Restaurant Matcher.
+
+Transforms intermediate match data into final customer-facing CSV reports.
+"""
 import logging
 import pandas as pd
 from pathlib import Path
@@ -6,8 +11,8 @@ from typing import Optional, Dict
 logger = logging.getLogger(__name__)
 
 
-class TransformationPipeline:
-    """Pipeline for transforming data into final output format."""
+class FinalCustomerFacingReportGenerator:
+    """Generator for final customer-facing reports from matched restaurant data."""
     
     @staticmethod
     def create_incorporation_link(registration_index: str) -> str:

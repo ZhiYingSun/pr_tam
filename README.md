@@ -12,7 +12,7 @@ source venv/bin/activate
 python main.py --limit 50 --batch-size 25 --max-concurrent 20
 
 # Quick test with mock data
-python main.py --limit 5 --mock --skip-validation --skip-transformation
+python main.py --limit 5 --mock --skip-validation
 ```
 
 ## Project Structure
@@ -21,12 +21,12 @@ python main.py --limit 5 --mock --skip-validation --skip-transformation
 pr_tam/
 ├── main.py          # Main entry point for the pipeline
 ├── src/             # Core source code
-│   ├── pipelines/   # Pipeline components (matching, validation, transformation)
+│   ├── orchestrator/   # Pipeline orchestration
 │   ├── matchers/    # Matching algorithms
 │   ├── searchers/   # Business search logic
 │   ├── validators/  # OpenAI validation
 │   ├── utils/       # Utility functions
-│   └── data/        # Data models
+│   └── models/      # Data models
 ├── data/            # Data directories (raw, processed, output)
 ├── tests/           # Test suite
 ├── config/          # Configuration files

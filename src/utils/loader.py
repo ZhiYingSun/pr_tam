@@ -5,7 +5,7 @@ import pandas as pd
 import logging
 from pathlib import Path
 from typing import List, Optional, Protocol
-from src.data.models import RestaurantRecord, create_restaurant_from_csv_row
+from src.models.models import RestaurantRecord, create_restaurant_from_csv_row
 
 logger = logging.getLogger(__name__)
 
@@ -13,7 +13,6 @@ logger = logging.getLogger(__name__)
 class RestaurantLoader(Protocol):
     """
     Protocol defining the interface for restaurant loaders.
-    Allows dependency injection and easy testing.
     """
     def load(self, source: str, limit: Optional[int] = None) -> List[RestaurantRecord]:
         """
@@ -102,8 +101,7 @@ class CSVRestaurantLoader:
 
 def load_restaurants(csv_path: str, limit: Optional[int] = None) -> List[RestaurantRecord]:
     """
-    Convenience function to load restaurants from CSV file.
-    Uses CSVRestaurantLoader internally for backward compatibility.
+    Load restaurants from CSV file.
     
     Args:
         csv_path: Path to the cleaned restaurants CSV file

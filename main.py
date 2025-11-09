@@ -24,6 +24,7 @@ sys.path.insert(0, str(project_root))
 
 from src.pipelines.orchestrator import PipelineOrchestrator
 from src.data.models import MatchingConfig
+from src.searchers.async_searcher import AsyncIncorporationSearcher, AsyncMockIncorporationSearcher
 
 # Configure logging
 logs_dir = project_root / "logs"
@@ -126,11 +127,24 @@ Examples:
         logger.error(f"Input file not found: {input_path}")
         sys.exit(1)
     
-    # Initialize orchestrator
+    # Create searcher (dependency injection - allows passing mock for testing)
+    try:
+        if args.mock:
+            searcher = AsyncMockIncorporationSearcher()
+        else:
+            zyte_api_key = os.getenv("ZYTE_API_KEY")
+            if not zyte_api_key:
+                raise ValueError("ZYTE_API_KEY environment variable not set")
+            searcher = AsyncIncorporationSearcher(zyte_api_key, max_concurrent=args.max_concurrent)
+    except Exception as e:
+        logger.error(f"Failed to create searcher: {e}")
+        sys.exit(1)
+    
+    # Initialize orchestrator with injected searcher
     try:
         orchestrator = PipelineOrchestrator(
+            searcher=searcher,
             config=config,
-            use_mock=args.mock,
             skip_validation=args.skip_validation,
             skip_transformation=args.skip_transformation
         )

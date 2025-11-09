@@ -6,8 +6,11 @@ import base64
 import binascii
 import pandas as pd
 from dataclasses import dataclass
-from typing import Optional, Tuple, List, Dict, Any
+from typing import Optional, Tuple, List, Dict, Any, TYPE_CHECKING
 from pydantic import BaseModel, Field
+
+if TYPE_CHECKING:
+    from typing import ForwardRef
 
 
 class BusinessRecord(BaseModel):
@@ -22,7 +25,7 @@ class BusinessRecord(BaseModel):
     resident_agent_address: Optional[str] = None
 
     @classmethod
-    def from_corporation(cls, corporation: Optional[CorporationDetail], **kwargs):
+    def from_corporation(cls, corporation: Optional['CorporationDetail'], **kwargs):
         return cls(
             legal_name=corporation.corpName if corporation else '',
             registration_number=str(corporation.corpRegisterNumber) if corporation and corporation.corpRegisterNumber else '',

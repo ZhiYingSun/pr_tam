@@ -81,7 +81,7 @@ class PipelineOrchestrator:
         try:
             match_result = await matcher.find_best_match_async(restaurant)
         except Exception as e:
-            logger.error(f"Error matching restaurant '{restaurant.name}': {e}")
+            logger.error(f"Error matching restaurant '{restaurant.name}': {e}",  exc_info=True)
         
         # Step 2: Validate match (if enabled and match found)
         validation_result = None
@@ -89,7 +89,7 @@ class PipelineOrchestrator:
             try:
                 validation_result = await self.validator.validate_match(match_result)
             except Exception as e:
-                logger.error(f"Error validating match for '{restaurant.name}': {e}")
+                logger.error(f"Error validating match for '{restaurant.name}': {e}", exc_info=True)
         
         return {
             'match_result': match_result,

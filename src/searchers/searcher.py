@@ -1,5 +1,5 @@
 """
-Async Puerto Rico incorporation documents API client with connection pooling
+Puerto Rico incorporation documents API client with connection pooling
 """
 import json
 import logging
@@ -20,7 +20,7 @@ from pydantic import ValidationError
 logger = logging.getLogger(__name__)
 
 
-class AsyncIncorporationSearcher:
+class IncorporationSearcher:
 
     def __init__(self, zyte_api_key: str, max_concurrent: int = 20):
         self.zyte_api_key = zyte_api_key
@@ -37,7 +37,7 @@ class AsyncIncorporationSearcher:
         """Async context manager exit - close ZyteClient session."""
         await self.zyte_client.close()
     
-    async def search_business_async(self, business_name: str, limit: int = 5) -> List[BusinessRecord]:
+    async def search_business(self, business_name: str, limit: int = 5) -> List[BusinessRecord]:
         """Search for business by name using reverse engineered PR incorporation API."""
         
         payload = {
@@ -59,7 +59,7 @@ class AsyncIncorporationSearcher:
         
         try:
             # Use Zyte for rate-limited requests
-            response = await self._make_corporation_search_request_async(payload, headers)
+            response = await self._make_corporation_search_request(payload, headers)
             logger.debug(f"Search response for '{business_name}': {response}")
             
             if response and response.response and response.response.records:
@@ -76,7 +76,7 @@ class AsyncIncorporationSearcher:
                         if business_entity_id:
                             # Get detailed business information using registrationIndex
                             registration_index = record.registrationIndex
-                            detailed_record = await self._get_business_details_async(business_entity_id, registration_index)
+                            detailed_record = await self._get_business_details(business_entity_id, registration_index)
                             if detailed_record:
                                 business_record = self._create_business_record_from_details(detailed_record)
                                 logger.debug(f"Successfully created detailed record for {business_entity_id}")
@@ -104,9 +104,9 @@ class AsyncIncorporationSearcher:
             logger.error(f"Error searching for business '{business_name}': {e}")
             return []
     
-    async def _make_corporation_search_request_async(self, payload: Dict, headers: Dict) -> Optional[CorporationSearchResponse]:
+    async def _make_corporation_search_request(self, payload: Dict, headers: Dict) -> Optional[CorporationSearchResponse]:
         try:
-            logger.debug(f"Making async request through Zyte")
+            logger.debug(f"Making request through Zyte")
 
             zyte_response = await self.zyte_client.post_request(
                 url=self.search_url,
@@ -123,10 +123,10 @@ class AsyncIncorporationSearcher:
                 return None
                     
         except Exception as e:
-            logger.error(f"Zyte async POST request failed: {e}")
+            logger.error(f"Zyte POST request failed: {e}")
             return None
     
-    async def _get_business_details_async(self, business_entity_id: int, registration_index: str = None) -> Optional[CorporationDetailResponseData]:
+    async def _get_business_details(self, business_entity_id: int, registration_index: str = None) -> Optional[CorporationDetailResponseData]:
         try:
             # Try different URL patterns based on what we have available
             url = f"https://rceapi.estado.pr.gov/api/corporation/info/{registration_index}"
@@ -140,7 +140,7 @@ class AsyncIncorporationSearcher:
             
 
             logger.debug(f"Trying detail URL with registrationIndex: {url}")
-            response = await self._make_corporation_detail_get_request_async(url, headers)
+            response = await self._make_corporation_detail_get_request(url, headers)
             logger.debug(f"Detail response type: {type(response)}, value: {response}")
                 
             if response and response.response and response.response.corporation:
@@ -155,9 +155,9 @@ class AsyncIncorporationSearcher:
             logger.error(f"Error getting business details for entity {business_entity_id}: {e}")
             return None
     
-    async def _make_corporation_detail_get_request_async(self, url: str, headers: Dict) -> Optional[CorporationDetailResponse]:
+    async def _make_corporation_detail_get_request(self, url: str, headers: Dict) -> Optional[CorporationDetailResponse]:
         try:
-            logger.debug(f"Making async GET request through Zyte to {url}")
+            logger.debug(f"Making GET request through Zyte to {url}")
 
             zyte_response = await self.zyte_client.get_request(
                 url=url,
@@ -173,7 +173,7 @@ class AsyncIncorporationSearcher:
                 return None
                     
         except Exception as e:
-            logger.error(f"Zyte async GET request failed: {e}")
+            logger.error(f"Zyte GET request failed: {e}")
             return None
     
     def _create_business_record_from_details(self, details: CorporationDetailResponseData) -> BusinessRecord:

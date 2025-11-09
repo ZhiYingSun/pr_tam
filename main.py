@@ -104,7 +104,7 @@ def main():
     
     # Create pipeline components
     loader = CSVRestaurantLoader()
-    transformation_pipeline = FinalCustomerFacingReportGenerator()
+    report_generator = FinalCustomerFacingReportGenerator()
  
     try:
         orchestrator = PipelineOrchestrator(
@@ -112,7 +112,7 @@ def main():
             searcher=searcher,
             config=config,
             loader=loader,
-            transformation_pipeline=transformation_pipeline
+            report_generator=report_generator
         )
     except Exception as e:
         logger.error(f"Failed to initialize orchestrator: {e}")

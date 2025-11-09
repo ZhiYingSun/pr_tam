@@ -25,7 +25,7 @@ class PipelineOrchestrator:
         searcher: IncorporationSearcher,
         config: MatchingConfig,
         loader: RestaurantLoader,
-        transformation_pipeline: FinalCustomerFacingReportGenerator
+        report_generator: FinalCustomerFacingReportGenerator
     ):
         """
         Initialize the pipeline orchestrator.
@@ -40,7 +40,7 @@ class PipelineOrchestrator:
         self.config = config
         self.searcher = searcher
         self.loader = loader
-        self.transformation_pipeline = transformation_pipeline
+        self.report_generator = report_generator
 
         self.validator = LLMValidator(
             openai_client=openai_client,

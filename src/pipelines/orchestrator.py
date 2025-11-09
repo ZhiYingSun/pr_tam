@@ -21,6 +21,7 @@ class PipelineOrchestrator:
     
     def __init__(
         self,
+        openai_api_key: str,
         config: Optional[MatchingConfig] = None,
         use_mock: bool = False,
         skip_transformation: bool = False
@@ -29,10 +30,7 @@ class PipelineOrchestrator:
         self.use_mock = use_mock
         self.skip_transformation = skip_transformation
         
-        # Always initialize validator - fail fast if API key missing
-        openai_api_key = os.getenv('OPENAI_API_KEY')
-        if not openai_api_key:
-            raise ValueError("OPENAI_API_KEY not found in environment. Validation is required.")
+        # Initialize validator with provided API key
         self.validator = OpenAIValidator(
             api_key=openai_api_key,
             model="gpt-4o-mini",

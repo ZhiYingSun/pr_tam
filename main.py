@@ -121,9 +121,16 @@ Examples:
         logger.error(f"Input file not found: {input_path}")
         sys.exit(1)
     
-    # Initialize orchestrator
+    # Validate OpenAI API key (fail fast before creating orchestrator)
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        logger.error("OPENAI_API_KEY not found in environment. Validation is required.")
+        sys.exit(1)
+    
+    # Initialize orchestrator with injected API key
     try:
         orchestrator = PipelineOrchestrator(
+            openai_api_key=openai_api_key,
             config=config,
             use_mock=args.mock,
             skip_transformation=args.skip_transformation

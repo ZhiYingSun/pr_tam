@@ -1,5 +1,5 @@
 """
-Async Restaurant Matcher
+Restaurant Matcher
 """
 import re
 import logging
@@ -11,17 +11,17 @@ from src.data.models import RestaurantRecord, BusinessRecord, MatchResult, Match
 logger = logging.getLogger(__name__)
 
 
-class AsyncRestaurantMatcher:
+class RestaurantMatcher:
     """
-    Async matcher for restaurant records.
+    Matcher for restaurant records.
     """
     
     def __init__(self, incorporation_searcher, max_concurrent: int = 20):
         """
-        Initialize async restaurant matcher.
+        Initialize restaurant matcher.
         
         Args:
-            incorporation_searcher: AsyncIncorporationSearcher instance
+            incorporation_searcher: IncorporationSearcher instance
             max_concurrent: Deprecated - kept for compatibility but not used.
                            Rate limiting is handled by ZyteClient.
         """
@@ -125,13 +125,13 @@ class AsyncRestaurantMatcher:
         
         return ''
 
-    async def find_best_match_async(self, restaurant: RestaurantRecord) -> Optional[MatchResult]:
+    async def find_best_match(self, restaurant: RestaurantRecord) -> Optional[MatchResult]:
         """
-        Searches for the best matching business record for a given restaurant asynchronously.
+        Searches for the best matching business record for a given restaurant.
         Rate limiting handled by ZyteClient.
         """
         search_query = self._normalize_name(restaurant.name)
-        candidates = await self.incorporation_searcher.search_business_async(
+        candidates = await self.incorporation_searcher.search_business(
             search_query,
             limit=MatchingConfig.MAX_CANDIDATES
         )
@@ -190,15 +190,15 @@ class AsyncRestaurantMatcher:
                 match_reason="No candidates found"
             )
 
-    async def match_multiple_restaurants_async(self, restaurants: List[RestaurantRecord]) -> List[MatchResult]:
+    async def match_multiple_restaurants(self, restaurants: List[RestaurantRecord]) -> List[MatchResult]:
         """
         Processes a list of restaurant records concurrently and attempts to find matches for each.
         Rate limiting handled by ZyteClient.
         """
-        logger.info(f"Starting async matching for {len(restaurants)} restaurants with max_concurrent={self.max_concurrent}")
+        logger.info(f"Starting matching for {len(restaurants)} restaurants with max_concurrent={self.max_concurrent}")
         
         # Create tasks for all restaurants
-        tasks = [self.find_best_match_async(restaurant) for restaurant in restaurants]
+        tasks = [self.find_best_match(restaurant) for restaurant in restaurants]
         
         # Execute all tasks concurrently with exception handling
         results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -216,7 +216,7 @@ class AsyncRestaurantMatcher:
             # Note: result can be None if there was an error, but we now always return MatchResult
         
         if error_count > 0:
-            logger.warning(f"Encountered {error_count} errors during async matching")
+            logger.warning(f"Encountered {error_count} errors during matching")
         
-        logger.info(f"Async matching completed: {len(matched_results)} matches found from {len(restaurants)} restaurants")
+        logger.info(f"Matching completed: {len(matched_results)} matches found from {len(restaurants)} restaurants")
         return matched_results

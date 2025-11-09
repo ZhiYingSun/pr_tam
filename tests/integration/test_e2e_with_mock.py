@@ -17,7 +17,7 @@ from src.data.models import (
     ZyteHttpResponse,
 )
 from src.pipelines.orchestrator import PipelineOrchestrator
-from src.searchers.async_searcher import AsyncIncorporationSearcher
+from src.searchers.searcher import IncorporationSearcher
 from src.searchers.zyte_client import ZyteClient
 
 
@@ -29,7 +29,7 @@ async def test_e2e_with_zyte_client_mock():
     This demonstrates:
     1. Dependency injection: searcher is injected into orchestrator
     2. Client-level mocking: ZyteClient methods are mocked
-    3. Real searcher logic: AsyncIncorporationSearcher runs with mocked HTTP calls
+    3. Real searcher logic: IncorporationSearcher runs with mocked HTTP calls
     """
     # Create a test restaurant
     restaurant = RestaurantRecord(
@@ -86,7 +86,7 @@ async def test_e2e_with_zyte_client_mock():
          patch.object(ZyteClient, 'get_request', side_effect=mock_get_request):
         
         # Create real searcher (but with mocked ZyteClient)
-        searcher = AsyncIncorporationSearcher(zyte_api_key="test_key", max_concurrent=5)
+        searcher = IncorporationSearcher(zyte_api_key="test_key", max_concurrent=5)
         
         # Create orchestrator with injected searcher
         orchestrator = PipelineOrchestrator(
@@ -98,8 +98,8 @@ async def test_e2e_with_zyte_client_mock():
         
         # Process the restaurant
         async with searcher:
-            from src.matchers.async_matcher import AsyncRestaurantMatcher
-            matcher = AsyncRestaurantMatcher(searcher, max_concurrent=5)
+            from src.matchers.matcher import RestaurantMatcher
+            matcher = RestaurantMatcher(searcher, max_concurrent=5)
             
             match_result, validation_result = await orchestrator.run_restaurant(restaurant, matcher)
             

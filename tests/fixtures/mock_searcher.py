@@ -79,7 +79,7 @@ class AsyncMockIncorporationSearcher:
         return business_records
     
     def _normalize_name(self, name: str) -> str:
-        """Normalize name for matching (same logic as AsyncRestaurantMatcher)"""
+        """Normalize name for matching (same logic as RestaurantMatcher)"""
         if not name or not isinstance(name, str):
             return ""
             

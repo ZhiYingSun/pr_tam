@@ -24,7 +24,7 @@ sys.path.insert(0, str(project_root))
 
 from src.pipelines.orchestrator import PipelineOrchestrator
 from src.data.models import MatchingConfig
-from src.searchers.async_searcher import AsyncIncorporationSearcher
+from src.searchers.searcher import IncorporationSearcher
 from src.clients.openai_client import OpenAIClient
 
 # Configure logging
@@ -126,7 +126,7 @@ Examples:
     
     # Create singleton clients (rate limited)
     openai_client = OpenAIClient(api_key=openai_api_key)
-    searcher = AsyncIncorporationSearcher(zyte_api_key, max_concurrent=args.max_concurrent)
+    searcher = IncorporationSearcher(zyte_api_key, max_concurrent=args.max_concurrent)
  
     try:
         orchestrator = PipelineOrchestrator(

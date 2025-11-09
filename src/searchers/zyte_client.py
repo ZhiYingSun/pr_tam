@@ -9,7 +9,7 @@ import aiohttp
 from aiohttp import ClientSession, ClientTimeout, BasicAuth
 from aiolimiter import AsyncLimiter
 
-from src.data.models import ZyteHttpResponse
+from src.data.api_models import ZyteHttpResponse
 
 logger = logging.getLogger(__name__)
 

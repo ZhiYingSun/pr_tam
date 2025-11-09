@@ -7,9 +7,10 @@ from datetime import datetime
 
 from src.utils.loader import RestaurantLoader, CSVRestaurantLoader
 from src.utils.output import generate_all_outputs, get_match_statistics
-from src.data.models import MatchingConfig, RestaurantRecord, MatchResult, ValidationResult
-from src.matchers.async_matcher import AsyncRestaurantMatcher
-from src.searchers.async_searcher import AsyncIncorporationSearcher
+from src.data.models import MatchingConfig, RestaurantRecord, MatchResult
+from src.data.validation_models import ValidationResult
+from src.matchers.matcher import RestaurantMatcher
+from src.searchers.searcher import IncorporationSearcher
 from src.validators.llm_validator import LLMValidator
 from src.pipelines.transformation_pipeline import TransformationPipeline
 from src.clients.openai_client import OpenAIClient
@@ -23,7 +24,7 @@ class PipelineOrchestrator:
     def __init__(
         self,
         openai_client: OpenAIClient,
-        searcher: AsyncIncorporationSearcher,
+        searcher: IncorporationSearcher,
         config: Optional[MatchingConfig] = None,
         skip_transformation: bool = False,
         loader: Optional[RestaurantLoader] = None
@@ -33,7 +34,7 @@ class PipelineOrchestrator:
         
         Args:
             openai_client: OpenAIClient instance (dependency injection)
-            searcher: AsyncIncorporationSearcher instance
+            searcher: IncorporationSearcher instance
             config: Optional matching configuration
             skip_transformation: Whether to skip data transformation step
             loader: RestaurantLoader instance (defaults to CSVRestaurantLoader)
@@ -56,7 +57,7 @@ class PipelineOrchestrator:
     async def run_restaurant(
         self,
         restaurant: RestaurantRecord,
-        matcher: AsyncRestaurantMatcher
+        matcher: RestaurantMatcher
     ) -> Tuple[Optional[MatchResult], Optional[ValidationResult]]:
         """
         Process a single restaurant through the full match → validate pipeline.
@@ -66,7 +67,7 @@ class PipelineOrchestrator:
 
         Args:
         restaurant: RestaurantRecord to process.
-        matcher: Shared AsyncRestaurantMatcher instance.
+        matcher: Shared RestaurantMatcher instance.
 
         Returns:
         Tuple of (MatchResult, ValidationResult). Either can be None if not found/available.
@@ -74,7 +75,7 @@ class PipelineOrchestrator:
         # Step 1: Find best match
         match_result = None
         try:
-            match_result = await matcher.find_best_match_async(restaurant)
+            match_result = await matcher.find_best_match(restaurant)
         except Exception as e:
             logger.error(f"Error matching restaurant '{restaurant.name}': {e}",  exc_info=True)
 
@@ -118,7 +119,7 @@ class PipelineOrchestrator:
         logger.info(f"Loaded {len(restaurants)} restaurants")
 
         async with self.searcher:
-            matcher = AsyncRestaurantMatcher(self.searcher, max_concurrent=max_concurrent)
+            matcher = RestaurantMatcher(self.searcher, max_concurrent=max_concurrent)
 
             logger.info(f"Processing {len(restaurants)} restaurants concurrently...")
             tasks = [self.run_restaurant(restaurant, matcher) for restaurant in restaurants]

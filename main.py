@@ -51,10 +51,10 @@ Examples:
   python main.py --limit 5 --mock
   
   # Production run with 50 restaurants
-  python main.py --limit 50 --batch-size 25 --max-concurrent 20
+  python main.py --limit 50 --max-concurrent 20
   
   # Full pipeline with all steps
-  python main.py --limit 500 --batch-size 100 --max-concurrent 20
+  python main.py --limit 500 --max-concurrent 20
   
   # Skip validation for faster testing
   python main.py --limit 100 --skip-validation
@@ -76,12 +76,6 @@ Examples:
         type=int,
         default=50,
         help='Number of restaurants to process (default: 50)'
-    )
-    parser.add_argument(
-        '--batch-size', '-b',
-        type=int,
-        default=25,
-        help='Batch size for processing (default: 25)'
     )
     parser.add_argument(
         '--max-concurrent', '-c',
@@ -150,7 +144,6 @@ Examples:
             input_csv=str(input_path),
             output_dir=args.output,
             limit=args.limit,
-            batch_size=args.batch_size,
             max_concurrent=args.max_concurrent
         ))
         

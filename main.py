@@ -57,7 +57,7 @@ Examples:
   python main.py --limit 500 --max-concurrent 20
   
   # Skip validation for faster testing
-  python main.py --limit 100 --skip-validation
+  python main.py --limit 100
         """
     )
     
@@ -95,11 +95,6 @@ Examples:
         help='Use mock searcher for testing (no API calls)'
     )
     parser.add_argument(
-        '--skip-validation',
-        action='store_true',
-        help='Skip OpenAI validation step'
-    )
-    parser.add_argument(
         '--skip-transformation',
         action='store_true',
         help='Skip data transformation step'
@@ -131,7 +126,6 @@ Examples:
         orchestrator = PipelineOrchestrator(
             config=config,
             use_mock=args.mock,
-            skip_validation=args.skip_validation,
             skip_transformation=args.skip_transformation
         )
     except Exception as e:

@@ -23,30 +23,21 @@ class PipelineOrchestrator:
         self,
         config: Optional[MatchingConfig] = None,
         use_mock: bool = False,
-        skip_validation: bool = False,
         skip_transformation: bool = False
     ):
         self.config = config or MatchingConfig()
         self.use_mock = use_mock
-        self.skip_validation = skip_validation
         self.skip_transformation = skip_transformation
         
-        if not skip_validation:
-            try:
-                openai_api_key = os.getenv('OPENAI_API_KEY')
-                if not openai_api_key:
-                    raise ValueError("OPENAI_API_KEY not found in environment")
-                self.validator = OpenAIValidator(
-                    api_key=openai_api_key,
-                    model="gpt-4o-mini",
-                    max_concurrent_calls=5
-                )
-            except ValueError as e:
-                logger.warning(f"Validation unavailable: {e}")
-                self.skip_validation = True
-                self.validator = None
-        else:
-            self.validator = None
+        # Always initialize validator - fail fast if API key missing
+        openai_api_key = os.getenv('OPENAI_API_KEY')
+        if not openai_api_key:
+            raise ValueError("OPENAI_API_KEY not found in environment. Validation is required.")
+        self.validator = OpenAIValidator(
+            api_key=openai_api_key,
+            model="gpt-4o-mini",
+            max_concurrent_calls=5
+        )
         
         if not skip_transformation:
             self.transformation_pipeline = TransformationPipeline()
@@ -83,9 +74,9 @@ class PipelineOrchestrator:
         except Exception as e:
             logger.error(f"Error matching restaurant '{restaurant.name}': {e}",  exc_info=True)
         
-        # Step 2: Validate match (if enabled and match found)
+        # Step 2: Validate match (if match found)
         validation_result = None
-        if not self.skip_validation and self.validator and match_result and match_result.business:
+        if match_result and match_result.business:
             try:
                 validation_result = await self.validator.validate_match(match_result)
             except Exception as e:
@@ -131,7 +122,7 @@ class PipelineOrchestrator:
             logger.info(f"  Limit: {limit} restaurants")
         logger.info(f"  Max concurrent: {max_concurrent}")
         logger.info(f"  Use mock: {self.use_mock}")
-        logger.info(f"  Skip validation: {self.skip_validation}")
+        logger.info(f"  Validation: enabled")
         logger.info(f"  Skip transformation: {self.skip_transformation}")
         logger.info("=" * 80)
         
@@ -185,8 +176,7 @@ class PipelineOrchestrator:
         
         logger.info(f"✅ Processed {len(restaurants)} restaurants")
         logger.info(f"   Matches found: {len(match_results)}")
-        if not self.skip_validation:
-            logger.info(f"   Validated: {len(validation_results)}")
+        logger.info(f"   Validated: {len(validation_results)}")
         
         # Generate output files
         logger.info("Generating output files...")

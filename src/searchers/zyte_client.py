@@ -7,6 +7,7 @@ import logging
 from typing import Dict, Any, Optional
 import aiohttp
 from aiohttp import ClientSession, ClientTimeout, BasicAuth
+from aiolimiter import AsyncLimiter
 
 from src.data.models import ZyteHttpResponse
 
@@ -31,8 +32,13 @@ class ZyteClient:
             self.api_key = api_key or os.getenv('ZYTE_API_KEY')
             if not self.api_key:
                 raise ValueError("Zyte API key must be provided or set in ZYTE_API_KEY environment variable")
+            
+            # Rate limiter: 500 requests per minute
+            self.rate_limiter = AsyncLimiter(max_rate=500, time_period=60)
+            
             self.session = None
             self._initialized = True
+            logger.info("Initialized Zyte client with rate limiter (500/minute)")
     
     async def __aenter__(self):
         """Async context manager entry - create session with connection pooling."""
@@ -72,40 +78,41 @@ class ZyteClient:
         if not self.session or self.session.closed:
             raise RuntimeError("ZyteClient session not initialized. Use 'async with ZyteClient(...)'")
         
-        payload = {
-            "url": url,
-            "httpResponseBody": True,
-            "httpRequestMethod": "POST",
-            "httpRequestText": json.dumps(request_body),
-        }
-        
-        if headers:
-            payload["customHttpRequestHeaders"] = [
-                {"name": k, "value": v} for k, v in headers.items()
-            ]
-        
-        try:
-            async with self.session.post(
-                "https://api.zyte.com/v1/extract",
-                json=payload
-            ) as resp:
-                if resp.status != 200:
-                    logger.error(f"Zyte API returned status {resp.status}")
-                    raise aiohttp.ClientResponseError(
-                        request_info=resp.request_info,
-                        history=resp.history,
-                        status=resp.status
-                    )
-                
-                zyte_data = await resp.json()
-                
-                # Parse with Pydantic and decode
-                zyte_response = ZyteHttpResponse(**zyte_data)
-                return zyte_response
-                
-        except (ValueError, aiohttp.ClientError) as e:
-            logger.error(f"Zyte POST request failed: {e}")
-            raise
+        async with self.rate_limiter:
+            payload = {
+                "url": url,
+                "httpResponseBody": True,
+                "httpRequestMethod": "POST",
+                "httpRequestText": json.dumps(request_body),
+            }
+            
+            if headers:
+                payload["customHttpRequestHeaders"] = [
+                    {"name": k, "value": v} for k, v in headers.items()
+                ]
+            
+            try:
+                async with self.session.post(
+                    "https://api.zyte.com/v1/extract",
+                    json=payload
+                ) as resp:
+                    if resp.status != 200:
+                        logger.error(f"Zyte API returned status {resp.status}")
+                        raise aiohttp.ClientResponseError(
+                            request_info=resp.request_info,
+                            history=resp.history,
+                            status=resp.status
+                        )
+                    
+                    zyte_data = await resp.json()
+                    
+                    # Parse with Pydantic and decode
+                    zyte_response = ZyteHttpResponse(**zyte_data)
+                    return zyte_response
+                    
+            except (ValueError, aiohttp.ClientError) as e:
+                logger.error(f"Zyte POST request failed: {e}")
+                raise
     
     async def get_request(
         self,
@@ -129,36 +136,37 @@ class ZyteClient:
         if not self.session or self.session.closed:
             raise RuntimeError("ZyteClient session not initialized. Use 'async with ZyteClient(...)'")
         
-        payload = {
-            "url": url,
-            "httpResponseBody": True,
-            "httpRequestMethod": "GET",
-        }
-        
-        if headers:
-            payload["customHttpRequestHeaders"] = [
-                {"name": k, "value": v} for k, v in headers.items()
-            ]
-        
-        try:
-            async with self.session.post(
-                "https://api.zyte.com/v1/extract",
-                json=payload
-            ) as resp:
-                if resp.status != 200:
-                    logger.error(f"Zyte API returned status {resp.status}")
-                    raise aiohttp.ClientResponseError(
-                        request_info=resp.request_info,
-                        history=resp.history,
-                        status=resp.status
-                    )
-                
-                zyte_data = await resp.json()
-                
-                # Parse with Pydantic and decode
-                zyte_response = ZyteHttpResponse(**zyte_data)
-                return zyte_response
-                
-        except (ValueError, aiohttp.ClientError) as e:
-            logger.error(f"Zyte GET request failed: {e}")
-            raise
+        async with self.rate_limiter:
+            payload = {
+                "url": url,
+                "httpResponseBody": True,
+                "httpRequestMethod": "GET",
+            }
+            
+            if headers:
+                payload["customHttpRequestHeaders"] = [
+                    {"name": k, "value": v} for k, v in headers.items()
+                ]
+            
+            try:
+                async with self.session.post(
+                    "https://api.zyte.com/v1/extract",
+                    json=payload
+                ) as resp:
+                    if resp.status != 200:
+                        logger.error(f"Zyte API returned status {resp.status}")
+                        raise aiohttp.ClientResponseError(
+                            request_info=resp.request_info,
+                            history=resp.history,
+                            status=resp.status
+                        )
+                    
+                    zyte_data = await resp.json()
+                    
+                    # Parse with Pydantic and decode
+                    zyte_response = ZyteHttpResponse(**zyte_data)
+                    return zyte_response
+                    
+            except (ValueError, aiohttp.ClientError) as e:
+                logger.error(f"Zyte GET request failed: {e}")
+                raise

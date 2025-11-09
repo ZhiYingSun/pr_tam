@@ -1,16 +1,17 @@
 """
-LLM Validator
+LLM Validator - Business logic for validating matches using LLM.
+Uses OpenAIClient via dependency injection.
 """
 import asyncio
 import logging
 import json
 from typing import List, Dict, Optional, Tuple, Any
 from pydantic import BaseModel
-from openai import AsyncOpenAI
 from openai import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
 from src.data.models import MatchResult, MatchingConfig
+from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
 
@@ -30,13 +31,29 @@ class ValidationResult(BaseModel):
 class LLMValidator:
     """
     Validates restaurant-business matches using OpenAI's language model.
+    Uses OpenAIClient via dependency injection for making API calls.
     """
-    def __init__(self, api_key: str, model: str = "gpt-3.5-turbo", temperature: float = 0.2, max_concurrent_calls: int = 5):
-        self.client = AsyncOpenAI(api_key=api_key)
+    def __init__(
+        self,
+        openai_client: OpenAIClient,
+        model: str = "gpt-4o-mini",
+        temperature: float = 0.2,
+        max_concurrent_calls: int = 5
+    ):
+        """
+        Initialize LLM validator.
+        
+        Args:
+            openai_client: OpenAIClient instance (dependency injection)
+            model: Model name (default: gpt-4o-mini)
+            temperature: Sampling temperature
+            max_concurrent_calls: Maximum concurrent validation calls
+        """
+        self.openai_client = openai_client
         self.model = model
         self.temperature = temperature
         self.semaphore = asyncio.Semaphore(max_concurrent_calls)
-        logger.info(f"Initialized OpenAI validator with model: {self.model}")
+        logger.info(f"Initialized LLM validator with model: {self.model}")
 
     def _construct_prompt(self, match: MatchResult) -> str:
         """Constructs the prompt for OpenAI based on the match details."""
@@ -97,9 +114,9 @@ Example JSON Output:
         retry=retry_if_exception_type(APIStatusError)
     )
     async def _call_openai_api(self, prompt: str) -> Optional[Dict]:
-        """Makes an asynchronous call to the OpenAI API."""
+        """Makes an asynchronous call to the OpenAI API via OpenAIClient."""
         try:
-            response = await self.client.chat.completions.create(
+            response = await self.openai_client.chat_completion(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
@@ -109,14 +126,10 @@ Example JSON Output:
                 response_format={"type": "json_object"}
             )
             
-            content = response.choices[0].message.content
-            return json.loads(content)
+            return response
         except APIStatusError as e:
             logger.error(f"OpenAI API error (status {e.status_code}): {e.response}")
             raise  # Re-raise to trigger retry
-        except json.JSONDecodeError as e:
-            logger.error(f"Failed to decode JSON from OpenAI response: {e}. Raw content: {content[:500]}...")
-            return None
         except Exception as e:
             logger.error(f"An unexpected error occurred during OpenAI API call: {e}")
             return None

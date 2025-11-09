@@ -5,7 +5,7 @@ import asyncio
 import logging
 import json
 from typing import List, Dict, Optional, Tuple, Any
-from dataclasses import dataclass
+from pydantic import BaseModel
 from openai import AsyncOpenAI
 from openai import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -14,8 +14,8 @@ from src.data.models import MatchResult, MatchingConfig
 
 logger = logging.getLogger(__name__)
 
-@dataclass
-class ValidationResult:
+
+class ValidationResult(BaseModel):
     """Represents the result of an OpenAI validation for a single match."""
     restaurant_name: str
     business_legal_name: str

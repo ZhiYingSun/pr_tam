@@ -2,7 +2,7 @@ import os
 import logging
 import asyncio
 from pathlib import Path
-from typing import Optional, Dict, List
+from typing import Optional, Dict, List, Tuple
 from datetime import datetime
 
 from src.utils.loader import load_restaurants
@@ -29,8 +29,7 @@ class PipelineOrchestrator:
         self.config = config or MatchingConfig()
         self.use_mock = use_mock
         self.skip_transformation = skip_transformation
-        
-        # Initialize validator with provided API key
+
         self.validator = OpenAIValidator(
             api_key=openai_api_key,
             model="gpt-4o-mini",
@@ -46,24 +45,19 @@ class PipelineOrchestrator:
         self,
         restaurant: RestaurantRecord,
         matcher: AsyncRestaurantMatcher
-    ) -> Dict:
+    ) -> Tuple[Optional[MatchResult], Optional[ValidationResult]]:
         """
-        Process a single restaurant end-to-end: match -> validate -> return result.
-        
-        This method processes ONE restaurant through the complete pipeline.
-        All restaurants are processed concurrently via asyncio.gather() at the root level.
-        
-        The matcher (and its underlying searcher) are shared across all restaurants:
-        - Single connection pool (via ZyteClient singleton)
-        - Single semaphore for rate limiting (via matcher.max_concurrent)
-        - All async operations happen concurrently at the root, not in nested batches
-        
+        Process a single restaurant through the full match → validate pipeline.
+
+        Runs for one restaurant, but multiple tasks execute concurrently via asyncio.gather().
+        All tasks share the same matcher, connection pool (ZyteClient), and rate limiter (matcher.max_concurrent).
+
         Args:
-            restaurant: RestaurantRecord to process
-            matcher: AsyncRestaurantMatcher instance (shared across all restaurants)
-            
+        restaurant: RestaurantRecord to process.
+        matcher: Shared AsyncRestaurantMatcher instance.
+
         Returns:
-            Dictionary with match_result and validation_result (if validation enabled)
+        Tuple of (MatchResult, ValidationResult). Either can be None if not found/available.
         """
         # Step 1: Find best match
         match_result = None
@@ -71,7 +65,7 @@ class PipelineOrchestrator:
             match_result = await matcher.find_best_match_async(restaurant)
         except Exception as e:
             logger.error(f"Error matching restaurant '{restaurant.name}': {e}",  exc_info=True)
-        
+
         # Step 2: Validate match (if match found)
         validation_result = None
         if match_result and match_result.business:
@@ -79,11 +73,8 @@ class PipelineOrchestrator:
                 validation_result = await self.validator.validate_match(match_result)
             except Exception as e:
                 logger.error(f"Error validating match for '{restaurant.name}': {e}", exc_info=True)
-        
-        return {
-            'match_result': match_result,
-            'validation_result': validation_result
-        }
+
+        return match_result, validation_result
     
     async def run(
         self,
@@ -163,11 +154,13 @@ class PipelineOrchestrator:
                 error_count += 1
                 continue
             
-            if result.get('match_result'):
-                match_results.append(result['match_result'])
+            match_result, validation_result = result
             
-            if result.get('validation_result'):
-                validation_results.append(result['validation_result'])
+            if match_result:
+                match_results.append(match_result)
+            
+            if validation_result:
+                validation_results.append(validation_result)
         
         if error_count > 0:
             logger.warning(f"Encountered {error_count} errors during processing")

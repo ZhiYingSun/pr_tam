@@ -107,11 +107,9 @@ Examples:
     
     args = parser.parse_args()
     
-    # Set logging level
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    
-    # Create configuration
+
     config = MatchingConfig()
     config.NAME_MATCH_THRESHOLD = args.threshold
     
@@ -120,14 +118,13 @@ Examples:
     if not input_path.exists():
         logger.error(f"Input file not found: {input_path}")
         sys.exit(1)
-    
-    # Validate OpenAI API key (fail fast before creating orchestrator)
+
     openai_api_key = os.getenv("OPENAI_API_KEY")
     if not openai_api_key:
         logger.error("OPENAI_API_KEY not found in environment. Validation is required.")
         sys.exit(1)
     
-    # Initialize orchestrator with injected API key
+    # Initialize orchestrator
     try:
         orchestrator = PipelineOrchestrator(
             openai_api_key=openai_api_key,

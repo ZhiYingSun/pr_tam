@@ -2,7 +2,7 @@ import pytest
 import asyncio
 from src.data.models import RestaurantRecord, BusinessRecord, MatchingConfig
 from src.matchers.async_matcher import AsyncRestaurantMatcher
-from src.searchers.async_searcher import AsyncMockIncorporationSearcher
+from tests.fixtures.mock_searcher import AsyncMockIncorporationSearcher
 
 
 class TestMatchScoring:

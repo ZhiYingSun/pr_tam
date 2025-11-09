@@ -10,7 +10,7 @@ from src.utils.output import generate_all_outputs, get_match_statistics
 from src.data.models import MatchingConfig, RestaurantRecord, MatchResult
 from src.matchers.async_matcher import AsyncRestaurantMatcher
 from src.searchers.async_searcher import AsyncIncorporationSearcher, AsyncMockIncorporationSearcher
-from src.validators.openai_validator import OpenAIValidator, ValidationResult
+from src.validators.llm_validator import LLMValidator, ValidationResult
 from src.pipelines.transformation_pipeline import TransformationPipeline
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class PipelineOrchestrator:
         self.use_mock = use_mock
         self.skip_transformation = skip_transformation
 
-        self.validator = OpenAIValidator(
+        self.validator = LLMValidator(
             api_key=openai_api_key,
             model="gpt-4o-mini",
             max_concurrent_calls=5

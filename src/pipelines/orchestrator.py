@@ -96,24 +96,9 @@ class PipelineOrchestrator:
         Returns:
             Dictionary with complete pipeline results
         """
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
-        start_time = datetime.now()
-        
-        logger.info("=" * 80)
-        logger.info("🚀 STARTING COMPLETE PIPELINE")
-        logger.info("=" * 80)
-        logger.info(f"Configuration:")
-        logger.info(f"  Input: {input_csv}")
-        logger.info(f"  Output: {output_dir}")
-        if limit:
-            logger.info(f"  Limit: {limit} restaurants")
-        logger.info(f"  Max concurrent: {max_concurrent}")
-        logger.info(f"  Use mock: {self.use_mock}")
-        logger.info(f"  Validation: enabled")
-        logger.info(f"  Skip transformation: {self.skip_transformation}")
-        logger.info("=" * 80)
+        timestamp, output_path, start_time = self._initialize_pipeline_run(
+            input_csv, output_dir, limit, max_concurrent
+        )
         
         # Load restaurants
         logger.info("Loading restaurants...")
@@ -121,7 +106,6 @@ class PipelineOrchestrator:
         logger.info(f"Loaded {len(restaurants)} restaurants")
         
         # Initialize shared searcher and matcher
-        # These are shared across ALL restaurants for connection pooling and rate limiting
         if self.use_mock:
             searcher = AsyncMockIncorporationSearcher()
         else:
@@ -131,14 +115,8 @@ class PipelineOrchestrator:
             searcher = AsyncIncorporationSearcher(zyte_api_key, max_concurrent=max_concurrent)
         
         async with searcher:
-            # Create a single matcher instance shared across all restaurants
-            # The matcher's semaphore limits concurrent API calls across all restaurants
             matcher = AsyncRestaurantMatcher(searcher, max_concurrent=max_concurrent)
-            
-            # Process all restaurants concurrently using asyncio.gather at the ROOT level
-            # This is the ONLY place where async concurrency happens - no nested batching
-            # Each restaurant goes through: match -> validate (sequential for that restaurant)
-            # But all restaurants run concurrently via gather()
+
             logger.info(f"Processing {len(restaurants)} restaurants concurrently...")
             tasks = [self.run_restaurant(restaurant, matcher) for restaurant in restaurants]
             restaurant_results = await asyncio.gather(*tasks, return_exceptions=True)
@@ -165,7 +143,7 @@ class PipelineOrchestrator:
         if error_count > 0:
             logger.warning(f"Encountered {error_count} errors during processing")
         
-        logger.info(f"✅ Processed {len(restaurants)} restaurants")
+        logger.info(f" Processed {len(restaurants)} restaurants")
         logger.info(f"   Matches found: {len(match_results)}")
         logger.info(f"   Validated: {len(validation_results)}")
         
@@ -188,7 +166,7 @@ class PipelineOrchestrator:
         
         duration = datetime.now() - start_time
         logger.info("\n" + "=" * 80)
-        logger.info("✅ PIPELINE COMPLETED")
+        logger.info("PIPELINE COMPLETED")
         logger.info(f"Duration: {duration}")
         logger.info("=" * 80)
         
@@ -206,6 +184,46 @@ class PipelineOrchestrator:
             'final_output': final_output,
             'duration': duration
         }
+    
+    def _initialize_pipeline_run(
+        self,
+        input_csv: str,
+        output_dir: str,
+        limit: Optional[int],
+        max_concurrent: int
+    ) -> Tuple[str, Path, datetime]:
+        """
+        Initialize pipeline run: setup paths, timestamps, and log configuration.
+        
+        Args:
+            input_csv: Path to input CSV file
+            output_dir: Output directory for results
+            limit: Optional limit on number of restaurants
+            max_concurrent: Maximum concurrent API calls
+            
+        Returns:
+            Tuple of (timestamp, output_path, start_time)
+        """
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        start_time = datetime.now()
+        
+        logger.info("=" * 80)
+        logger.info("STARTING COMPLETE PIPELINE")
+        logger.info("=" * 80)
+        logger.info(f"Configuration:")
+        logger.info(f"  Input: {input_csv}")
+        logger.info(f"  Output: {output_dir}")
+        if limit:
+            logger.info(f"  Limit: {limit} restaurants")
+        logger.info(f"  Max concurrent: {max_concurrent}")
+        logger.info(f"  Use mock: {self.use_mock}")
+        logger.info(f"  Validation: enabled")
+        logger.info(f"  Skip transformation: {self.skip_transformation}")
+        logger.info("=" * 80)
+        
+        return timestamp, output_path, start_time
     
     def _save_validation_results(
         self,

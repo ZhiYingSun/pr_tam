@@ -17,9 +17,16 @@ class AsyncRestaurantMatcher:
     """
     
     def __init__(self, incorporation_searcher, max_concurrent: int = 20):
+        """
+        Initialize async restaurant matcher.
+        
+        Args:
+            incorporation_searcher: AsyncIncorporationSearcher instance
+            max_concurrent: Deprecated - kept for compatibility but not used.
+                           Rate limiting is handled by ZyteClient.
+        """
         self.incorporation_searcher = incorporation_searcher
-        self.max_concurrent = max_concurrent
-        self.semaphore = asyncio.Semaphore(max_concurrent)
+        self.max_concurrent = max_concurrent  # Kept for compatibility
 
     def _normalize_name(self, name: str) -> str:
         """
@@ -121,72 +128,72 @@ class AsyncRestaurantMatcher:
     async def find_best_match_async(self, restaurant: RestaurantRecord) -> Optional[MatchResult]:
         """
         Searches for the best matching business record for a given restaurant asynchronously.
+        Rate limiting handled by ZyteClient.
         """
-        async with self.semaphore:  # the context manager will release slot if exception occurs
-            search_query = self._normalize_name(restaurant.name)
-            candidates = await self.incorporation_searcher.search_business_async(
-                search_query,
-                limit=MatchingConfig.MAX_CANDIDATES
-            )
+        search_query = self._normalize_name(restaurant.name)
+        candidates = await self.incorporation_searcher.search_business_async(
+            search_query,
+            limit=MatchingConfig.MAX_CANDIDATES
+        )
+        
+        best_match_result: Optional[MatchResult] = None
+        best_score = 0.0
+        
+        for candidate_business in candidates:
+            name_score = self._calculate_name_similarity(restaurant.name, candidate_business.legal_name)
             
-            best_match_result: Optional[MatchResult] = None
-            best_score = 0.0
+            current_score, match_reason, postal_code_match, city_match = \
+                self._calculate_match_score(restaurant, candidate_business, name_score)
             
-            for candidate_business in candidates:
-                name_score = self._calculate_name_similarity(restaurant.name, candidate_business.legal_name)
+            if current_score > best_score:
+                best_score = current_score
+                match_type = determine_match_type(best_score)
+                is_accepted = best_score >= MatchingConfig.NAME_MATCH_THRESHOLD
                 
-                current_score, match_reason, postal_code_match, city_match = \
-                    self._calculate_match_score(restaurant, candidate_business, name_score)
-                
-                if current_score > best_score:
-                    best_score = current_score
-                    match_type = determine_match_type(best_score)
-                    is_accepted = best_score >= MatchingConfig.NAME_MATCH_THRESHOLD
-                    
-                    best_match_result = MatchResult(
-                        restaurant=restaurant,
-                        business=candidate_business,
-                        confidence_score=best_score,
-                        match_type=match_type,
-                        is_accepted=is_accepted,
-                        name_score=name_score,
-                        postal_code_match=postal_code_match,
-                        city_match=city_match,
-                        match_reason=match_reason
-                    )
-            
-            if best_match_result and best_match_result.is_accepted:
-                logger.info(
-                    f"Matched '{restaurant.name}' with '{best_match_result.business.legal_name}' "
-                    f"Confidence: {best_match_result.confidence_score:.1f}% ({best_match_result.match_type})"
-                )
-                return best_match_result
-            
-            if best_match_result:
-                logger.info(
-                    f"No accepted match for '{restaurant.name}'. Best candidate: "
-                    f"'{best_match_result.business.legal_name}' with {best_match_result.confidence_score:.1f}% ({best_match_result.match_type})"
-                )
-                return best_match_result
-            else:
-                logger.info(f"No candidates found for '{restaurant.name}'")
-                # Create a MatchResult for unmatched restaurants
-                return MatchResult(
+                best_match_result = MatchResult(
                     restaurant=restaurant,
-                    business=None,
-                    confidence_score=0.0,
-                    match_type="none",
-                    is_accepted=False,
-                    name_score=0.0,
-                    postal_code_match=False,
-                    city_match=False,
-                    match_reason="No candidates found"
+                    business=candidate_business,
+                    confidence_score=best_score,
+                    match_type=match_type,
+                    is_accepted=is_accepted,
+                    name_score=name_score,
+                    postal_code_match=postal_code_match,
+                    city_match=city_match,
+                    match_reason=match_reason
                 )
+        
+        if best_match_result and best_match_result.is_accepted:
+            logger.info(
+                f"Matched '{restaurant.name}' with '{best_match_result.business.legal_name}' "
+                f"Confidence: {best_match_result.confidence_score:.1f}% ({best_match_result.match_type})"
+            )
+            return best_match_result
+        
+        if best_match_result:
+            logger.info(
+                f"No accepted match for '{restaurant.name}'. Best candidate: "
+                f"'{best_match_result.business.legal_name}' with {best_match_result.confidence_score:.1f}% ({best_match_result.match_type})"
+            )
+            return best_match_result
+        else:
+            logger.info(f"No candidates found for '{restaurant.name}'")
+            # Create a MatchResult for unmatched restaurants
+            return MatchResult(
+                restaurant=restaurant,
+                business=None,
+                confidence_score=0.0,
+                match_type="none",
+                is_accepted=False,
+                name_score=0.0,
+                postal_code_match=False,
+                city_match=False,
+                match_reason="No candidates found"
+            )
 
     async def match_multiple_restaurants_async(self, restaurants: List[RestaurantRecord]) -> List[MatchResult]:
         """
         Processes a list of restaurant records concurrently and attempts to find matches for each.
-        Uses semaphore to limit simultaneous API calls.
+        Rate limiting handled by ZyteClient.
         """
         logger.info(f"Starting async matching for {len(restaurants)} restaurants with max_concurrent={self.max_concurrent}")
         

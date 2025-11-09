@@ -42,8 +42,7 @@ class PipelineOrchestrator:
 
         self.validator = LLMValidator(
             openai_client=openai_client,
-            model="gpt-4o-mini",
-            max_concurrent_calls=5
+            model="gpt-4o-mini"
         )
         
         if not skip_transformation:

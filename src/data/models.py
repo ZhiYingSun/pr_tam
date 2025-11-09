@@ -1,6 +1,8 @@
 """
 Data models for Puerto Rico Restaurant Matcher
 """
+from __future__ import annotations
+
 import json
 import base64
 import binascii

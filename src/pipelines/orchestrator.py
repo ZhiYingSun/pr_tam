@@ -52,14 +52,7 @@ class PipelineOrchestrator:
             self.transformation_pipeline = TransformationPipeline()
         else:
             self.transformation_pipeline = None
-    
-    def find_latest_file(self, directory: Path, pattern: str) -> Optional[Path]:
-        """Find the latest file matching a pattern in the directory."""
-        files = list(directory.glob(pattern))
-        if not files:
-            return None
-        return max(files, key=lambda f: f.stat().st_mtime)
-    
+
     async def run_restaurant(
         self,
         restaurant: RestaurantRecord,

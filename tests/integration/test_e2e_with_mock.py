@@ -11,14 +11,16 @@ import json
 from unittest.mock import patch
 from typing import Dict, Any
 
-from src.data.models import (
+from src.models.models import (
     RestaurantRecord,
     MatchingConfig,
-    ZyteHttpResponse,
 )
-from src.pipelines.orchestrator import PipelineOrchestrator
+from src.models.api_models import ZyteHttpResponse
+from src.orchestrator.orchestrator import PipelineOrchestrator
 from src.searchers.searcher import IncorporationSearcher
-from src.searchers.zyte_client import ZyteClient
+from src.clients.zyte_client import ZyteClient
+from src.utils.loader import CSVRestaurantLoader
+from src.utils.final_customer_facing_report_generator import FinalCustomerFacingReportGenerator
 
 
 @pytest.mark.asyncio
@@ -86,22 +88,27 @@ async def test_e2e_with_zyte_client_mock():
          patch.object(ZyteClient, 'get_request', side_effect=mock_get_request):
         
         # Create real searcher (but with mocked ZyteClient)
-        searcher = IncorporationSearcher(zyte_api_key="test_key", max_concurrent=5)
+        searcher = IncorporationSearcher(zyte_api_key="test_key")
         
         # Create orchestrator with injected searcher
+        from src.clients.openai_client import OpenAIClient
+        openai_client = OpenAIClient(api_key="test-openai-key")
+        loader = CSVRestaurantLoader()
+        transformation_pipeline = FinalCustomerFacingReportGenerator()
         orchestrator = PipelineOrchestrator(
-            openai_api_key="test-openai-key",  # Mock key - validation will fail but that's ok
+            openai_client=openai_client,
             searcher=searcher,
             config=MatchingConfig(),
-            skip_transformation=True
+            loader=loader,
+            transformation_pipeline=transformation_pipeline
         )
         
         # Process the restaurant
         async with searcher:
             from src.matchers.matcher import RestaurantMatcher
-            matcher = RestaurantMatcher(searcher, max_concurrent=5)
+            matcher = RestaurantMatcher(searcher)
             
-            match_result, validation_result = await orchestrator.run_restaurant(restaurant, matcher)
+            match_result, validation_result = await orchestrator.process_restaurant(restaurant, matcher)
             
             # Verify that the mock was called (searcher tried to search)
             # The match_result may be None if no match found above threshold, which is fine

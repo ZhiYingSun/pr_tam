@@ -1,6 +1,6 @@
 import pytest
 import asyncio
-from src.data.models import RestaurantRecord, BusinessRecord, MatchingConfig
+from src.models.models import RestaurantRecord, BusinessRecord, MatchingConfig
 from src.matchers.matcher import RestaurantMatcher
 from tests.fixtures.mock_searcher import AsyncMockIncorporationSearcher
 
@@ -12,7 +12,7 @@ class TestMatchScoring:
     async def test_name_weighted_to_50_percent(self):
         """Test that name similarity contributes exactly 50% of total score"""
         async with AsyncMockIncorporationSearcher() as searcher:
-            matcher = RestaurantMatcher(searcher, max_concurrent=10)
+            matcher = RestaurantMatcher(searcher)
             
             restaurant = RestaurantRecord(
                 name="Test Restaurant",
@@ -45,7 +45,7 @@ class TestMatchScoring:
     async def test_full_match_with_all_bonuses(self):
         """Test that perfect match with all bonuses reaches 100"""
         async with AsyncMockIncorporationSearcher() as searcher:
-            matcher = RestaurantMatcher(searcher, max_concurrent=10)
+            matcher = RestaurantMatcher(searcher)
             
             restaurant = RestaurantRecord(
                 name="Perfect Match Restaurant",
@@ -76,7 +76,7 @@ class TestMatchScoring:
     async def test_postal_code_bonus(self):
         """Test postal code bonus adds 30 points"""
         async with AsyncMockIncorporationSearcher() as searcher:
-            matcher = RestaurantMatcher(searcher, max_concurrent=10)
+            matcher = RestaurantMatcher(searcher)
             
             restaurant = RestaurantRecord(
                 name="Different Name",
@@ -121,7 +121,7 @@ class TestMatchScoring:
     async def test_city_bonus(self):
         """Test city match bonus adds 20 points"""
         async with AsyncMockIncorporationSearcher() as searcher:
-            matcher = RestaurantMatcher(searcher, max_concurrent=10)
+            matcher = RestaurantMatcher(searcher)
             
             restaurant = RestaurantRecord(
                 name="Test Restaurant",
@@ -153,7 +153,7 @@ class TestMatchScoring:
     async def test_score_bounds(self):
         """Test that scores are always between 0 and 100"""
         async with AsyncMockIncorporationSearcher() as searcher:
-            matcher = RestaurantMatcher(searcher, max_concurrent=10)
+            matcher = RestaurantMatcher(searcher)
             
             restaurant = RestaurantRecord(
                 name="Completely Different Name",

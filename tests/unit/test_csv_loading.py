@@ -6,7 +6,7 @@ import pandas as pd
 import tempfile
 from pathlib import Path
 from src.utils.loader import load_restaurants
-from src.data.models import RestaurantRecord, create_restaurant_from_csv_row
+from src.models.models import RestaurantRecord, create_restaurant_from_csv_row
 
 
 class TestCSVLoading:

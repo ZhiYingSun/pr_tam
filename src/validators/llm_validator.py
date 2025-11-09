@@ -1,25 +1,22 @@
 """
 LLM Validator - Business logic for validating matches using LLM.
-Uses OpenAIClient via dependency injection. Rate limiting handled by OpenAIClient.
 """
 import logging
-import json
 import asyncio
 from typing import List, Dict, Optional, Tuple, Any
 from pydantic import ValidationError
 from openai import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from src.data.models import MatchResult, MatchingConfig
-from src.data.validation_models import OpenAIValidationResponse, ValidationResult
+from src.models.models import MatchResult, MatchingConfig
+from src.models.validation_models import OpenAIValidationResponse, ValidationResult
 from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
 
 class LLMValidator:
     """
-    Validates restaurant-business matches using OpenAI's language model.
-    Uses OpenAIClient via dependency injection for making API calls.
+    Validates restaurant-business matches using a language model.
     """
     def __init__(
         self,
@@ -31,8 +28,8 @@ class LLMValidator:
         Initialize LLM validator.
         
         Args:
-            openai_client: OpenAIClient instance (dependency injection)
-            model: Model name (default: gpt-4o-mini)
+            openai_client: OpenAIClient instance
+            model: Model name
             temperature: Sampling temperature
         """
         self.openai_client = openai_client

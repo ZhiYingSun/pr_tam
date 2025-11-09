@@ -1,12 +1,14 @@
 """
-Output generation utilities for Puerto Rico Restaurant Matcher
+Intermediate match CSV generation utilities for Puerto Rico Restaurant Matcher.
+
+Generates intermediate CSV files and reports from match results before final transformation.
 """
 import pandas as pd
 import logging
 from pathlib import Path
 from typing import List, Dict, Any
 from datetime import datetime
-from src.data.models import MatchResult, RestaurantRecord, BusinessRecord
+from src.models.models import MatchResult, RestaurantRecord, BusinessRecord, GeneratedOutputFiles
 
 logger = logging.getLogger(__name__)
 
@@ -244,7 +246,7 @@ def generate_summary_report(matches: List[MatchResult], output_path: str) -> Non
     logger.info(f"Generated summary report at {output_path}")
 
 
-def generate_all_outputs(matches: List[MatchResult], output_dir: str = "data/output") -> Dict[str, str]:
+def generate_all_outputs(matches: List[MatchResult], output_dir: str = "data/output") -> GeneratedOutputFiles:
     """
     Generate all output files (matched CSV, unmatched CSV, summary report).
     
@@ -253,8 +255,10 @@ def generate_all_outputs(matches: List[MatchResult], output_dir: str = "data/out
         output_dir: Directory to save output files
         
     Returns:
-        Dictionary with file paths of generated files
+        GeneratedOutputFiles with file paths of generated files
     """
+    logger.info("Generating output files...")
+
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
     
@@ -271,17 +275,17 @@ def generate_all_outputs(matches: List[MatchResult], output_dir: str = "data/out
     generate_unmatched_restaurants_csv(matches, str(unmatched_csv))
     generate_summary_report(matches, str(summary_report))
     
-    generated_files = {
-        'matched_csv': str(matched_csv),
-        'unmatched_csv': str(unmatched_csv),
-        'summary_report': str(summary_report)
-    }
+    generated_files = GeneratedOutputFiles(
+        matched_csv=str(matched_csv),
+        unmatched_csv=str(unmatched_csv),
+        summary_report=str(summary_report)
+    )
     
     logger.info(f"Generated all output files in {output_dir}")
     return generated_files
 
 
-def get_match_statistics(matches: List[MatchResult]) -> Dict[str, Any]:
+def print_match_statistics(matches: List[MatchResult]) -> Dict[str, Any]:
     """
     Get detailed statistics about the matching results.
     
@@ -332,62 +336,8 @@ def get_match_statistics(matches: List[MatchResult]) -> Dict[str, Any]:
             'postal_code_matches': 0,
             'city_matches': 0
         })
+
+    logger.info(f"Match rate: {stats['match_rate']:.1f}%")
+    logger.info(f"Average confidence: {stats['avg_confidence_score']:.1f}%")
     
     return stats
-
-
-if __name__ == "__main__":
-    # Test the output generation functions
-    from src.data.models import MatchResult, RestaurantRecord, BusinessRecord
-    
-    # Create sample data for testing
-    sample_restaurant = RestaurantRecord(
-        name="Test Restaurant",
-        address="123 Main St",
-        city="San Juan",
-        postal_code="00908",
-        coordinates=(-66.0741174, 18.4563899),
-        rating=4.5
-    )
-    
-    sample_business = BusinessRecord(
-        legal_name="Test Restaurant Corp",
-        registration_number="12345",
-        street_address="123 Main St",
-        city="San Juan",
-        postal_code="00908",
-        status="ACTIVE",
-        resident_agent_name="Test Agent",
-        resident_agent_address="456 Agent St"
-    )
-    
-    sample_match = MatchResult(
-        restaurant=sample_restaurant,
-        business=sample_business,
-        confidence_score=85.0,
-        match_type="high",
-        is_accepted=True,
-        name_score=75.0,
-        postal_code_match=True,
-        city_match=True,
-        match_reason="Name match: 85.0%"
-    )
-    
-    # Test output generation
-    print("Testing output generation...")
-    matches = [sample_match]
-    
-    # Generate outputs
-    files = generate_all_outputs(matches)
-    
-    print("✅ Generated files:")
-    for file_type, file_path in files.items():
-        print(f"  {file_type}: {file_path}")
-    
-    # Test statistics
-    stats = get_match_statistics(matches)
-    print(f"\n✅ Statistics:")
-    print(f"  Match rate: {stats['match_rate']:.1f}%")
-    print(f"  Average confidence: {stats['avg_confidence_score']:.1f}%")
-    
-    print("\n🎉 Output generation tests completed!")

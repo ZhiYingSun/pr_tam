@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 """
-Puerto Rico Restaurant Matcher - Main Entry Point
 Complete end-to-end pipeline for matching restaurants with PR incorporation documents
 """
 import os
@@ -10,24 +9,22 @@ import argparse
 import logging
 from pathlib import Path
 
-# Load environment variables
 try:
     from dotenv import load_dotenv
     load_dotenv()
 except ImportError:
     pass
 
-# Add project root and src to path
 project_root = Path(__file__).parent
-sys.path.insert(0, str(project_root / "src"))
 sys.path.insert(0, str(project_root))
 
-from src.pipelines.orchestrator import PipelineOrchestrator
-from src.data.models import MatchingConfig
+from src.orchestrator.orchestrator import PipelineOrchestrator
+from src.models.models import MatchingConfig, PipelineResult
 from src.searchers.searcher import IncorporationSearcher
 from src.clients.openai_client import OpenAIClient
+from src.utils.loader import CSVRestaurantLoader
+from src.utils.final_customer_facing_report_generator import FinalCustomerFacingReportGenerator
 
-# Configure logging
 logs_dir = project_root / "logs"
 logs_dir.mkdir(exist_ok=True)
 
@@ -41,57 +38,34 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description='Puerto Rico Restaurant Matcher - Complete Pipeline',
-        formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog="""
-Examples:
-  # Production run with 50 restaurants
-  python main.py --limit 50 --max-concurrent 20
-  
-  # Full pipeline with all steps
-  python main.py --limit 500 --max-concurrent 20
-  
-  # Skip transformation for faster testing
-  python main.py --limit 100 --skip-transformation
-        """
+        formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
     parser.add_argument(
         '--input', '-i',
         default='data/processed/cleaned_restaurants.csv',
-        help='Input CSV file path (default: data/processed/cleaned_restaurants.csv)'
+        help='Input CSV file path'
     )
     parser.add_argument(
         '--output', '-o',
         default='data/output',
-        help='Output directory (default: data/output)'
+        help='Output directory'
     )
     parser.add_argument(
         '--limit', '-l',
         type=int,
         default=50,
-        help='Number of restaurants to process (default: 50)'
-    )
-    parser.add_argument(
-        '--max-concurrent', '-c',
-        type=int,
-        default=20,
-        help='Maximum concurrent API calls (default: 20)'
+        help='Number of restaurants to process'
     )
     parser.add_argument(
         '--threshold', '-t',
         type=float,
         default=70.0,
-        help='Name match threshold percentage (default: 70.0)'
-    )
-    parser.add_argument(
-        '--skip-transformation',
-        action='store_true',
-        help='Skip data transformation step'
+        help='Name match threshold percentage'
     )
     parser.add_argument(
         '--verbose', '-v',
@@ -124,16 +98,21 @@ Examples:
         logger.error("ZYTE_API_KEY not found in environment.")
         sys.exit(1)
     
-    # Create singleton clients (rate limited)
+    # Create singleton clients
     openai_client = OpenAIClient(api_key=openai_api_key)
-    searcher = IncorporationSearcher(zyte_api_key, max_concurrent=args.max_concurrent)
+    searcher = IncorporationSearcher(zyte_api_key=zyte_api_key)
+    
+    # Create pipeline components
+    loader = CSVRestaurantLoader()
+    report_generator = FinalCustomerFacingReportGenerator()
  
     try:
         orchestrator = PipelineOrchestrator(
             openai_client=openai_client,
             searcher=searcher,
             config=config,
-            skip_transformation=args.skip_transformation
+            loader=loader,
+            report_generator=report_generator
         )
     except Exception as e:
         logger.error(f"Failed to initialize orchestrator: {e}")
@@ -144,45 +123,43 @@ Examples:
         result = asyncio.run(orchestrator.run(
             input_csv=str(input_path),
             output_dir=args.output,
-            limit=args.limit,
-            max_concurrent=args.max_concurrent
+            limit=args.limit
         ))
-        
-        # Check success status (orchestrator raises exception if error_rate > 50%)
-        if result.get('success'):
-            logger.info("\n" + "=" * 80)
-            logger.info("PIPELINE SUMMARY")
-            logger.info("=" * 80)
-            logger.info(f"✅ Pipeline completed successfully")
-            logger.info(f"📁 Output directory: {result['output_dir']}")
-            
-            error_count = result.get('error_count', 0)
-            error_rate = result.get('error_rate', 0.0)
-            if error_count > 0:
-                logger.info(f"⚠️  Errors encountered: {error_count} ({error_rate*100:.1f}% error rate)")
-            
-            if result.get('matched_file'):
-                logger.info(f"📄 Matched restaurants: {result['matched_file']}")
-            
-            if result.get('validation_file'):
-                logger.info(f"📄 Validation results: {result['validation_file']}")
-            
-            if result.get('final_output'):
-                logger.info(f"📄 Final output: {result['final_output']}")
-            
-            logger.info("=" * 80)
+        if result.success:
+            _log_processing_result(result)
             sys.exit(0)
         else:
-            logger.error("❌ Pipeline failed")
+            logger.error("Pipeline failed")
             sys.exit(1)
             
     except KeyboardInterrupt:
-        logger.info("\n⚠️  Pipeline interrupted by user")
+        logger.info("Pipeline interrupted by user")
         sys.exit(1)
     except Exception as e:
-        logger.error(f"❌ Pipeline error: {e}", exc_info=True)
+        logger.error(f"Pipeline error: {e}", exc_info=True)
         sys.exit(1)
 
+
+def _log_processing_result(result: PipelineResult) -> None:
+    logger.info("\n" + "=" * 80)
+    logger.info("PIPELINE SUMMARY")
+    logger.info("=" * 80)
+    logger.info(f"Pipeline completed successfully")
+    logger.info(f"Output directory: {result.output_dir}")
+
+    if result.error_count > 0:
+        logger.info(f"Errors encountered: {result.error_count} ({result.error_rate * 100:.1f}% error rate)")
+
+    if result.matched_file:
+        logger.info(f"Matched restaurants: {result.matched_file}")
+
+    if result.validation_file:
+        logger.info(f"Validation results: {result.validation_file}")
+
+    if result.final_output:
+        logger.info(f"Final output: {result.final_output}")
+
+    logger.info("=" * 80)
 
 if __name__ == "__main__":
     main()

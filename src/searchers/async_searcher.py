@@ -7,8 +7,8 @@ import asyncio
 import re
 from typing import Dict, List, Any, Optional
 
-from src.data.models import (
-    BusinessRecord,
+from src.data.models import BusinessRecord
+from src.data.api_models import (
     CorporationSearchResponse,
     CorporationDetailResponse,
     CorporationDetailResponseData,

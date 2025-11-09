@@ -7,7 +7,8 @@ from datetime import datetime
 
 from src.utils.loader import RestaurantLoader, CSVRestaurantLoader
 from src.utils.output import generate_all_outputs, get_match_statistics
-from src.data.models import MatchingConfig, RestaurantRecord, MatchResult, ValidationResult
+from src.data.models import MatchingConfig, RestaurantRecord, MatchResult
+from src.data.validation_models import ValidationResult
 from src.matchers.async_matcher import AsyncRestaurantMatcher
 from src.searchers.async_searcher import AsyncIncorporationSearcher
 from src.validators.llm_validator import LLMValidator

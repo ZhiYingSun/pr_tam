@@ -1,15 +1,14 @@
 """
-Data models for Puerto Rico Restaurant Matcher
+Core domain models for Puerto Rico Restaurant Matcher.
 """
 from __future__ import annotations
 
-import json
-import base64
-import binascii
 import pandas as pd
-from dataclasses import dataclass
-from typing import Optional, Tuple, List, Dict, Any, Literal
-from pydantic import BaseModel, Field
+from typing import Optional, Tuple, TYPE_CHECKING
+from pydantic import BaseModel
+
+if TYPE_CHECKING:
+    from src.data.api_models import CorporationDetail
 
 
 class BusinessRecord(BaseModel):
@@ -24,7 +23,10 @@ class BusinessRecord(BaseModel):
     resident_agent_address: Optional[str] = None
 
     @classmethod
-    def from_corporation(cls, corporation: Optional[CorporationDetail], **kwargs):
+    def from_corporation(cls, corporation: Optional["CorporationDetail"], **kwargs):
+        """Create BusinessRecord from CorporationDetail API model."""
+        from src.data.api_models import CorporationDetail  # Import here to avoid circular dependency
+        
         return cls(
             legal_name=corporation.corpName if corporation else '',
             registration_number=str(corporation.corpRegisterNumber) if corporation and corporation.corpRegisterNumber else '',
@@ -66,117 +68,6 @@ class MatchResult(BaseModel):
     match_reason: Optional[str] = None
 
 
-class OpenAIValidationResponse(BaseModel):
-    """Typed response from OpenAI validation API."""
-    match_score: int = Field(..., ge=0, le=100, description="Match score from 0 to 100")
-    confidence: Literal["high", "medium", "low"] = Field(..., description="Confidence level")
-    recommendation: Literal["accept", "reject", "manual_review"] = Field(..., description="Recommendation")
-    reasoning: str = Field(..., description="Explanation of the decision")
-
-
-class ValidationResult(BaseModel):
-    """Represents the result of an LLM validation for a single match."""
-    restaurant_name: str
-    business_legal_name: str
-    rapidfuzz_confidence_score: float
-    openai_match_score: Optional[int] = None
-    openai_confidence: Optional[str] = None
-    openai_recommendation: Optional[str] = None
-    openai_reasoning: Optional[str] = None
-    openai_raw_response: Optional[str] = None
-    final_status: str = "pending"  # accept, reject, manual_review
-
-
-class ZyteHttpResponse(BaseModel):
-    httpResponseBody: Optional[str] = Field(None, description="Base64 encoded response body")
-
-    def decode_body(self) -> Dict[str, Any]:
-        if not self.httpResponseBody:
-            raise ValueError("httpResponseBody is missing or empty")
-
-        try:
-            decoded_body = base64.b64decode(self.httpResponseBody).decode('utf-8')
-            return json.loads(decoded_body)
-        except (binascii.Error, UnicodeDecodeError) as e:
-            raise ValueError(f"Failed to decode base64 response body: {e}")
-        except json.JSONDecodeError as e:
-            raise ValueError(f"Failed to parse JSON from decoded body: {e}")
-
-
-class CorporationSearchRecord(BaseModel):
-    businessEntityId: Optional[int] = None
-    registrationNumber: Optional[int] = None
-    registrationIndex: Optional[str] = None
-    corpName: Optional[str] = None
-    classEs: Optional[str] = None
-    classEn: Optional[str] = None
-    profitTypeEs: Optional[str] = None
-    profitTypeEn: Optional[str] = None
-    statusId: Optional[int] = None
-    statusEs: Optional[str] = None
-    statusEn: Optional[str] = None
-
-
-class CorporationSearchResponseData(BaseModel):
-    totalRecords: Optional[int] = None
-    records: List[CorporationSearchRecord] = Field(default_factory=list)
-
-
-class CorporationSearchResponse(BaseModel):
-    response: Optional[CorporationSearchResponseData] = None
-    code: Optional[int] = None
-    info: Optional[Any] = None
-    success: Optional[bool] = None
-
-
-# Corporation Detail Response Models
-class StreetAddressDetail(BaseModel):
-    address1: Optional[str] = None
-    address2: Optional[str] = None
-    city: Optional[str] = None
-    zip: Optional[str] = None
-
-
-class IndividualNameDetail(BaseModel):
-    firstName: Optional[str] = None
-    middleName: Optional[str] = None
-    lastName: Optional[str] = None
-    surName: Optional[str] = None
-
-
-class OrganizationNameDetail(BaseModel):
-    name: Optional[str] = None
-
-
-class CorporationDetail(BaseModel):
-    corpName: Optional[str] = None
-    corpRegisterNumber: Optional[int] = None
-    corpRegisterIndex: Optional[str] = None
-    statusEn: Optional[str] = None
-
-
-class MainLocationDetail(BaseModel):
-    streetAddress: Optional[StreetAddressDetail] = None
-
-
-class ResidentAgentDetail(BaseModel):
-    isIndividual: Optional[bool] = None
-    individualName: Optional[IndividualNameDetail] = None
-    organizationName: Optional[OrganizationNameDetail] = None
-    streetAddress: Optional[StreetAddressDetail] = None
-
-
-class CorporationDetailResponseData(BaseModel):
-    corporation: Optional[CorporationDetail] = None
-    mainLocation: Optional[MainLocationDetail] = None
-    residentAgent: Optional[ResidentAgentDetail] = None
-
-
-class CorporationDetailResponse(BaseModel):
-    response: Optional[CorporationDetailResponseData] = None
-    code: Optional[int] = None
-    info: Optional[Any] = None
-    success: Optional[bool] = None
 
 
 class MatchingConfig:

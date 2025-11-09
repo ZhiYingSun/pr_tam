@@ -10,7 +10,8 @@ from pydantic import ValidationError
 from openai import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
 
-from src.data.models import MatchResult, MatchingConfig, OpenAIValidationResponse, ValidationResult
+from src.data.models import MatchResult, MatchingConfig
+from src.data.validation_models import OpenAIValidationResponse, ValidationResult
 from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)

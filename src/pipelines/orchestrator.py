@@ -140,8 +140,16 @@ class PipelineOrchestrator:
             if validation_result:
                 validation_results.append(validation_result)
         
+        # Calculate error rate and check threshold
+        error_rate = error_count / len(restaurants) if restaurants else 0.0
+        if error_rate > 0.5:
+            raise RuntimeError(
+                f"Pipeline failure: {error_count}/{len(restaurants)} restaurants failed "
+                f"({error_rate*100:.1f}% error rate exceeds 50% threshold)"
+            )
+        
         if error_count > 0:
-            logger.warning(f"Encountered {error_count} errors during processing")
+            logger.warning(f"Encountered {error_count} errors during processing ({error_rate*100:.1f}% error rate)")
         
         logger.info(f" Processed {len(restaurants)} restaurants")
         logger.info(f"   Matches found: {len(match_results)}")
@@ -171,7 +179,9 @@ class PipelineOrchestrator:
         logger.info("=" * 80)
         
         return {
-            'success': True,
+            'success': error_rate < 0.5,  # Success only if error rate below threshold
+            'error_count': error_count,
+            'error_rate': error_rate,
             'timestamp': timestamp,
             'input_csv': input_csv,
             'output_dir': str(output_path),

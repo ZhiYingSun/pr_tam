@@ -4,6 +4,7 @@ Uses OpenAIClient via dependency injection. Rate limiting handled by OpenAIClien
 """
 import logging
 import json
+import asyncio
 from typing import List, Dict, Optional, Tuple, Any
 from pydantic import ValidationError
 from openai import APIStatusError

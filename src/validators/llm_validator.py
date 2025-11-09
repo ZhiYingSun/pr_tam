@@ -102,6 +102,9 @@ Example JSON Output:
         Returns:
             OpenAIValidationResponse if successful, None on error
         """
+        # TODO Cache: cache OpenAI validation responses
+        # Cache key: hash(restaurant_name + business_legal_name + confidence_score)
+        
         try:
             response_dict = await self.openai_client.chat_completion(
                 model=self.model,

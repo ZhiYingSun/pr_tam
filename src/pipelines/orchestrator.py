@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Optional, Dict, List, Tuple
 from datetime import datetime
 
-from src.utils.loader import load_restaurants
+from src.utils.loader import RestaurantLoader, CSVRestaurantLoader
 from src.utils.output import generate_all_outputs, get_match_statistics
 from src.data.models import MatchingConfig, RestaurantRecord, MatchResult, ValidationResult
 from src.matchers.async_matcher import AsyncRestaurantMatcher
@@ -25,7 +25,8 @@ class PipelineOrchestrator:
         openai_client: OpenAIClient,
         searcher: AsyncIncorporationSearcher,
         config: Optional[MatchingConfig] = None,
-        skip_transformation: bool = False
+        skip_transformation: bool = False,
+        loader: Optional[RestaurantLoader] = None
     ):
         """
         Initialize the pipeline orchestrator.
@@ -35,10 +36,12 @@ class PipelineOrchestrator:
             searcher: AsyncIncorporationSearcher instance
             config: Optional matching configuration
             skip_transformation: Whether to skip data transformation step
+            loader: RestaurantLoader instance (defaults to CSVRestaurantLoader)
         """
         self.config = config or MatchingConfig()
         self.searcher = searcher
         self.skip_transformation = skip_transformation
+        self.loader = loader or CSVRestaurantLoader()
 
         self.validator = LLMValidator(
             openai_client=openai_client,
@@ -111,7 +114,7 @@ class PipelineOrchestrator:
         
         # Load restaurants
         logger.info("Loading restaurants...")
-        restaurants = load_restaurants(input_csv, limit=limit)
+        restaurants = self.loader.load(input_csv, limit=limit)
         logger.info(f"Loaded {len(restaurants)} restaurants")
 
         async with self.searcher:

@@ -77,6 +77,9 @@ class ZyteClient:
         if not self.session or self.session.closed:
             raise RuntimeError("ZyteClient session not initialized. Use 'async with ZyteClient(...)'")
         
+        # TODO Cache coporation search requests
+        # Cache key: hash(url + normalized request_body + headers)
+        
         async with self.rate_limiter:
             payload = {
                 "url": url,
@@ -134,6 +137,9 @@ class ZyteClient:
         """
         if not self.session or self.session.closed:
             raise RuntimeError("ZyteClient session not initialized. Use 'async with ZyteClient(...)'")
+        
+        # TODO Cache: cache business details requests
+        # Cache key: registration_index 
         
         async with self.rate_limiter:
             payload = {

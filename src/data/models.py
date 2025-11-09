@@ -1,6 +1,8 @@
 """
 Data models for Puerto Rico Restaurant Matcher
 """
+from __future__ import annotations
+
 import json
 import base64
 import binascii
@@ -33,8 +35,7 @@ class BusinessRecord(BaseModel):
 
 
 
-@dataclass
-class RestaurantRecord:
+class RestaurantRecord(BaseModel):
     """Represents a restaurant from Google Maps data"""
     name: str
     address: str
@@ -50,8 +51,8 @@ class RestaurantRecord:
     main_type: Optional[str] = None
 
 
-@dataclass
-class MatchResult:
+
+class MatchResult(BaseModel):
     """Represents the result of matching a restaurant with a business record"""
     restaurant: RestaurantRecord
     business: BusinessRecord

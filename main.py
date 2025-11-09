@@ -51,13 +51,13 @@ Examples:
   python main.py --limit 5 --mock
   
   # Production run with 50 restaurants
-  python main.py --limit 50 --batch-size 25 --max-concurrent 20
+  python main.py --limit 50 --max-concurrent 20
   
   # Full pipeline with all steps
-  python main.py --limit 500 --batch-size 100 --max-concurrent 20
+  python main.py --limit 500 --max-concurrent 20
   
   # Skip validation for faster testing
-  python main.py --limit 100 --skip-validation
+  python main.py --limit 100
         """
     )
     
@@ -78,12 +78,6 @@ Examples:
         help='Number of restaurants to process (default: 50)'
     )
     parser.add_argument(
-        '--batch-size', '-b',
-        type=int,
-        default=25,
-        help='Batch size for processing (default: 25)'
-    )
-    parser.add_argument(
         '--max-concurrent', '-c',
         type=int,
         default=20,
@@ -101,11 +95,6 @@ Examples:
         help='Use mock searcher for testing (no API calls)'
     )
     parser.add_argument(
-        '--skip-validation',
-        action='store_true',
-        help='Skip OpenAI validation step'
-    )
-    parser.add_argument(
         '--skip-transformation',
         action='store_true',
         help='Skip data transformation step'
@@ -118,11 +107,9 @@ Examples:
     
     args = parser.parse_args()
     
-    # Set logging level
     if args.verbose:
         logging.getLogger().setLevel(logging.DEBUG)
-    
-    # Create configuration
+
     config = MatchingConfig()
     config.NAME_MATCH_THRESHOLD = args.threshold
     
@@ -131,13 +118,18 @@ Examples:
     if not input_path.exists():
         logger.error(f"Input file not found: {input_path}")
         sys.exit(1)
+
+    openai_api_key = os.getenv("OPENAI_API_KEY")
+    if not openai_api_key:
+        logger.error("OPENAI_API_KEY not found in environment. Validation is required.")
+        sys.exit(1)
     
     # Initialize orchestrator
     try:
         orchestrator = PipelineOrchestrator(
+            openai_api_key=openai_api_key,
             config=config,
             use_mock=args.mock,
-            skip_validation=args.skip_validation,
             skip_transformation=args.skip_transformation
         )
     except Exception as e:
@@ -150,7 +142,6 @@ Examples:
             input_csv=str(input_path),
             output_dir=args.output,
             limit=args.limit,
-            batch_size=args.batch_size,
             max_concurrent=args.max_concurrent
         ))
         

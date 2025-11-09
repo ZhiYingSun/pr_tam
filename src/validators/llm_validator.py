@@ -1,11 +1,11 @@
 """
-OpenAI Validator
+LLM Validator
 """
 import asyncio
 import logging
 import json
 from typing import List, Dict, Optional, Tuple, Any
-from dataclasses import dataclass
+from pydantic import BaseModel
 from openai import AsyncOpenAI
 from openai import APIStatusError
 from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
@@ -14,9 +14,9 @@ from src.data.models import MatchResult, MatchingConfig
 
 logger = logging.getLogger(__name__)
 
-@dataclass
-class ValidationResult:
-    """Represents the result of an OpenAI validation for a single match."""
+
+class ValidationResult(BaseModel):
+    """Represents the result of an LLM validation for a single match."""
     restaurant_name: str
     business_legal_name: str
     rapidfuzz_confidence_score: float
@@ -27,7 +27,7 @@ class ValidationResult:
     openai_raw_response: Optional[str] = None
     final_status: str = "pending" # accept, reject, manual_review
 
-class OpenAIValidator:
+class LLMValidator:
     """
     Validates restaurant-business matches using OpenAI's language model.
     """
@@ -216,3 +216,4 @@ def create_validation_summary(validation_results: List[ValidationResult]) -> Dic
         "sample_rejects": rejected[:2],
         "sample_manual_reviews": manual_review[:2]
     }
+

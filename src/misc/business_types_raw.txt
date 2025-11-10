@@ -1,0 +1,902 @@
+(Andalusian restaurant, false)	1
+(Aquarium shop, false)	1
+(Argentinian restaurant, false)	8
+(Art gallery, false)	1
+(Asian fusion restaurant, false)	2
+(Asian grocery store, false)	2
+(Asian restaurant, false)	26
+(Authentic Japanese restaurant, false)	1
+(Açaí shop, false)	1
+(Bagel shop, false)	1
+(Bakery, false)	22
+(Baking supply store, false)	1
+(Bar, false)	116
+(Barbecue restaurant, false)	19
+(Beer hall, false)	1
+(Bistro, false)	5
+(Book store, false)	1
+(Boutique, false)	1
+(Bowling alley, false)	1
+(Brazilian restaurant, false)	1
+(Breakfast restaurant, false)	11
+(Brewery, false)	1
+(Brewpub, false)	1
+(Brunch restaurant, false)	14
+(Bubble tea store, false)	1
+(Buffet restaurant, false)	1
+(Butcher shop deli, false)	2
+(Cafe, false)	30
+(Cafeteria, false)	4
+(Cake shop, false)	3
+(Candy store, false)	1
+(Caribbean restaurant, false)	9
+(Cash and carry wholesaler, false)	1
+(Caterer, false)	2
+(Cheese shop, false)	1
+(Cheesesteak restaurant, false)	1
+(Chicken restaurant, false)	43
+(Chicken wings restaurant, false)	1
+(Childrens amusement center, false)	2
+(Chinese restaurant, false)	82
+(Chinese supermarket, false)	1
+(Chinese takeaway, false)	1
+(Chiropractor, false)	1
+(Churreria, false)	1
+(Cigar shop, false)	4
+(Club, false)	12
+(Cocktail bar, false)	8
+(Coffee roasters, false)	2
+(Coffee shop, false)	48
+(Coffee store, false)	3
+(Computer repair service, false)	1
+(Consignment shop, false)	1
+(Convenience store, false)	11
+(Cookie shop, false)	1
+(Copy shop, false)	1
+(Corporate office, false)	1
+(Coworking space, false)	1
+(Crab house, false)	1
+(Creole restaurant, false)	3
+(Cuban restaurant, false)	2
+(Dance club, false)	1
+(Dance pavillion, false)	1
+(Day spa, false)	1
+(Deli, false)	3
+(Delivery Chinese restaurant, false)	2
+(Delivery service, false)	2
+(Department store, false)	17
+(Dessert shop, false)	4
+(Diner, false)	7
+(Dinner theater, false)	2
+(Disco club, false)	5
+(Distribution service, false)	1
+(Dog trainer, false)	1
+(Dominican restaurant, false)	1
+(Donut shop, false)	1
+(Down home cooking restaurant, false)	6
+(Drug store, false)	39
+(Electronics store, false)	1
+(Espresso bar, false)	1
+(Event planner, false)	1
+(Family restaurant, false)	3
+(Farmers market, false)	2
+(Fast food restaurant, false)	118
+(Fine dining restaurant, false)	3
+(Fish store, false)	1
+(Food court, false)	3
+(French restaurant, false)	7
+(Fresh food market, false)	1
+(Frozen yogurt shop, false)	1
+(Fusion restaurant, false)	2
+(Gas station, false)	97
+(Gay bar, false)	4
+(General store, false)	3
+(Gift shop, false)	2
+(Gourmet grocery store, false)	2
+(Greek restaurant, false)	1
+(Grill, false)	2
+(Grocery store, false)	32
+(Gyro restaurant, false)	1
+(Hairdresser, false)	1
+(Hamburger restaurant, false)	27
+(Hawaiian restaurant, false)	1
+(Health food restaurant, false)	9
+(Health food store, false)	12
+(Herb shop, false)	1
+(Home goods store, false)	2
+(Home improvement store, false)	1
+(Hookah bar, false)	3
+(Horse boarding stable, false)	1
+(Hotel, false)	10
+(Ice cream shop, false)	45
+(Indian restaurant, false)	1
+(Internet cafe, false)	1
+(Irish pub, false)	2
+(Italian restaurant, false)	46
+(Japanese restaurant, false)	13
+(Japanese steakhouse, false)	1
+(Juice shop, false)	1
+(Karaoke bar, false)	1
+(Korean barbecue restaurant, false)	1
+(Korean restaurant, false)	1
+(Kosher restaurant, false)	1
+(Latin American restaurant, false)	2
+(Laundromat, false)	1
+(Lebanese restaurant, false)	1
+(Liquor store, false)	4
+(Live music bar, false)	1
+(Lounge, false)	1
+(Mandarin restaurant, false)	1
+(Marine supply store, false)	2
+(Market, false)	5
+(Mediterranean restaurant, false)	6
+(Mens clothing store, false)	1
+(Mexican grocery store, false)	1
+(Mexican restaurant, false)	86
+(Middle Eastern restaurant, false)	4
+(Mobile caterer, false)	1
+(Movie rental kiosk, false)	2
+(Nail salon, false)	1
+(Natural goods store, false)	1
+(Naturopathic practitioner, false)	1
+(New American restaurant, false)	1
+(Night club, false)	32
+(Nuevo Latino restaurant, false)	2
+(Nutritionist, false)	2
+(Oil change service, false)	2
+(Organic restaurant, false)	2
+(Party store, false)	4
+(Peruvian restaurant, false)	4
+(Pet store, false)	5
+(Pharmacy, false)	4
+(Pizza delivery, false)	26
+(Pizza restaurant, false)	111
+(Pizza takeaway, false)	5
+(Pretzel store, false)	3
+(Produce market, false)	2
+(Produce wholesaler, false)	1
+(Pub, false)	4
+(Puerto Rican restaurant, false)	71
+(Restaurant, false)	142
+(Restaurant supply store, false)	1
+(Rice restaurant, false)	1
+(Salsa bar, false)	1
+(Sandwich shop, false)	29
+(Seafood donburi restaurant, false)	1
+(Seafood restaurant, false)	40
+(Serviced accommodation, false)	1
+(Shelving store, false)	1
+(Shipping company, false)	1
+(Soft drinks shop, false)	1
+(Southern Italian restaurant, false)	1
+(Spa, false)	1
+(Spa and health club, false)	1
+(Spanish restaurant, false)	13
+(Sports bar, false)	16
+(Stand bar, false)	1
+(Steak house, false)	21
+(Store, false)	3
+(Sundae restaurant, false)	3
+(Supermarket, false)	66
+(Sushi restaurant, false)	34
+(Sushi takeaway, false)	2
+(Swiss restaurant, false)	1
+(Taco restaurant, false)	2
+(Takeout restaurant, false)	1
+(Tapas bar, false)	1
+(Tapas restaurant, false)	6
+(Tattoo shop, false)	1
+(Tea store, false)	1
+(Teppanyaki restaurant, false)	1
+(Tex-Mex restaurant, false)	5
+(Thai restaurant, false)	2
+(Tobacco shop, false)	3
+(Tour agency, false)	1
+(Tourist attraction, false)	1
+(Transportation service, false)	1
+(Turkish restaurant, false)	5
+(Vacation home rental agency, false)	1
+(Vaporizer store, false)	3
+(Vegan restaurant, false)	16
+(Vegetarian restaurant, false)	9
+(Venezuelan restaurant, false)	1
+(Vitamin & supplements store, false)	5
+(Warehouse club, false)	7
+(Wedding bakery, false)	1
+(Wedding service, false)	2
+(Weight loss service, false)	6
+(Wellness center, false)	2
+(Wine bar, false)	3
+(Wine store, false)	6
+(Winery, false)	1
+(ATM,Beer store,Car repair and maintenance service,Coffee shop,Gas station,General store,Lottery shop,Oil change service,Public bathroom, false)	1
+(ATM,Convenience store,Fast food restaurant,Gas station,Hamburger restaurant,Sandwich shop, false)	1
+(ATM,Convenience store,Fast food restaurant,Gas station,Sandwich shop, false)	1
+(ATM,Diesel fuel supplier,Gas station,Public bathroom, false)	1
+(ATM,Gas station,Public bathroom, false)	6
+(Acupuncture clinic,Alternative medicine practitioner,Chinese medicine clinic,Homeopath,Naturopathic practitioner,Nutritionist,Supermarket, false)	1
+(Acupuncture clinic,Medical office,Natural stone supplier,Naturopathic practitioner,Nutritionist,Vitamin & supplements store,Weight loss service, false)	1
+(Adult entertainment club, false)	1
+(Adult entertainment club,Event venue,Night club, false)	1
+(Adult entertainment club,Lounge,Night club, false)	1
+(Adult entertainment club,Night club, false)	1
+(Adult entertainment store,Convenience store,Lingerie store, false)	1
+(Air filter supplier,Appliance store,Bathroom supply store,Cabinet store,Electronics store,Hardware store,Home improvement store,Lighting store,Supermarket,Tool store,Wallpaper store, false)	1
+(Alcohol manufacturer,Bar,Distillery,Tour operator,Tourist attraction, false)	1
+(Alternative medicine practitioner,Facial spa,Massage therapist,Pilates studio,Vegetarian cafe and deli,Wellness center,Yoga studio, false)	1
+(American restaurant, false)	8
+(American restaurant,Bakery,Dessert restaurant,Dessert shop,Family restaurant,Restaurant,Takeout restaurant, false)	1
+(American restaurant,Banquet hall,Breakfast restaurant,Buffet restaurant,Family restaurant,Restaurant,Steak house, false)	1
+(American restaurant,Bar,Barbecue restaurant,Cocktail bar,Restaurant,Vegan restaurant,Vegetarian restaurant, false)	1
+(American restaurant,Bar,Diner,Family restaurant,Hamburger restaurant,Restaurant,Steak house,Traditional American restaurant, false)	3
+(American restaurant,Bar,Family restaurant,Hamburger restaurant,Mexican restaurant,Restaurant,Tex-Mex restaurant, false)	1
+(American restaurant,Bar,Family restaurant,Restaurant,Tex-Mex restaurant, false)	1
+(American restaurant,Bar,Grill,Restaurant,Tex-Mex restaurant, false)	1
+(American restaurant,Bar,Mexican restaurant,Night club,Pub, false)	1
+(American restaurant,Breakfast restaurant,Brunch restaurant, false)	1
+(American restaurant,Breakfast restaurant,Diner,Restaurant, false)	1
+(American restaurant,Breakfast restaurant,Family restaurant, false)	1
+(American restaurant,Caterer,Fine dining restaurant,Seafood restaurant,Steak house, false)	1
+(American restaurant,Cheesesteak restaurant,Fast food restaurant,Food court,Sandwich shop, false)	1
+(American restaurant,Chicken restaurant, false)	1
+(American restaurant,Cocktail bar,Sushi restaurant, false)	1
+(American restaurant,Delivery service,Fast food restaurant,Hamburger restaurant,Restaurant,Takeout restaurant, false)	2
+(American restaurant,Family restaurant,Restaurant, false)	1
+(American restaurant,Family restaurant,Restaurant,Steak house, false)	1
+(American restaurant,Fast food restaurant,Grill,Hamburger restaurant,Lunch restaurant,Meal delivery,Restaurant,Takeout restaurant,Vegetarian restaurant, false)	1
+(American restaurant,Fast food restaurant,Hamburger restaurant, false)	1
+(American restaurant,Puerto Rican restaurant, false)	1
+(American restaurant,Sandwich shop, false)	2
+(American restaurant,Steak house, false)	5
+(Amusement center,Bar,Event venue,Restaurant,Sports bar,Video arcade, false)	1
+(Amusement center,Childrens amusement center,Event venue,Pizza restaurant,Video arcade, false)	2
+(Andalusian restaurant, false)	1
+(Antique store,Clothing store,Consignment shop,Market,Mens clothing store,Salvage yard,Shopping mall,Thrift store,Used book store,Womens clothing store, false)	1
+(Aquarium shop,Fish store, false)	1
+(Argentinian restaurant, false)	6
+(Argentinian restaurant,Italian restaurant,Restaurant, false)	1
+(Argentinian restaurant,Steak house, false)	1
+(Art gallery,Bar,Convenience store,Lounge, false)	1
+(Art gallery,Bar,Live music bar,Performing arts theater, false)	1
+(Art gallery,Performing arts group,Souvenir store, false)	1
+(Art studio,Bar,Beer garden,Beer store,Cafeteria,Latin American restaurant,Museum,Psychotherapist,Restaurant, false)	1
+(Asian fusion restaurant, false)	1
+(Asian fusion restaurant,Asian restaurant,Chinese restaurant,Chinese takeaway,Sushi restaurant,Sushi takeaway, false)	1
+(Asian fusion restaurant,Asian restaurant,Chinese restaurant,Cocktail bar,Sushi restaurant, false)	1
+(Asian fusion restaurant,Asian restaurant,Fusion restaurant,Indian restaurant,Indian takeaway,Restaurant,Takeout restaurant,Thai restaurant, false)	1
+(Asian fusion restaurant,Bar,Sushi restaurant, false)	1
+(Asian fusion restaurant,Chinese restaurant,Cocktail bar,Sushi restaurant, false)	1
+(Asian fusion restaurant,Sushi restaurant, false)	1
+(Asian fusion restaurant,Sushi restaurant,Thai restaurant, false)	1
+(Asian grocery store, false)	1
+(Asian grocery store,Bubble tea store,Sushi restaurant, false)	1
+(Asian restaurant, false)	19
+(Asian restaurant,Caterer,Chinese noodle restaurant,Chinese restaurant,Chinese takeaway,Delivery Chinese restaurant,Fast food restaurant,Restaurant,Takeout restaurant,Wok restaurant, false)	6
+(Asian restaurant,Chinese restaurant,Japanese restaurant, false)	1
+(Asian restaurant,Chinese restaurant,Japanese restaurant,Poke bar,Vietnamese restaurant, false)	1
+(Asian restaurant,Chinese restaurant,Japanese restaurant,Sushi restaurant, false)	1
+(Asian restaurant,Chinese restaurant,Sushi restaurant, false)	1
+(Asian restaurant,Cocktail bar,Japanese restaurant,Seafood restaurant,Sushi restaurant,Wine bar, false)	1
+(Asian restaurant,Italian restaurant,Peruvian restaurant, false)	1
+(Asian restaurant,Japanese restaurant,Seafood restaurant,Sushi restaurant, false)	1
+(Asian restaurant,Japanese restaurant,Sushi restaurant,Sushi takeaway,Takeout restaurant, false)	1
+(Asian restaurant,Restaurant, false)	2
+(Asian restaurant,Sushi restaurant, false)	2
+(Asian restaurant,Sushi restaurant,Wine bar, false)	1
+(Association or organization,Bar,Club,Gay bar,Gay sauna,Sauna,Sauna club, false)	1
+(Audio visual equipment rental service,DJ service,Musician,Wedding service, false)	1
+(Authentic Japanese restaurant, false)	1
+(Authentic Japanese restaurant,Japanese restaurant,Sushi takeaway,Takeout restaurant, false)	1
+(Açaí shop,Coffee shop,Juice shop, false)	1
+(Açaí shop,Coffee stand,Deli,Fruit and vegetable store,Grocery store,Liquor store,Supermarket, false)	1
+(Açaí shop,Coffee stand,Deli,Grocery delivery service,Grocery store,Supermarket, false)	1
+(Bagel shop,Breakfast restaurant,Cafe,Coffee shop,Lunch restaurant,Sandwich shop,Vegan restaurant,Vegetarian cafe and deli, false)	1
+(Bait shop,Boat accessories supplier,Boat cover supplier,Fishing store,Marine supply store,Outdoor clothing and equipment shop,Outdoor sports store,Store,Water ski shop, false)	2
+(Bakery, false)	11
+(Bakery,Bistro,Breakfast restaurant,Brunch restaurant,Cocktail bar,Coffee shop,Lunch restaurant,Wine bar, false)	1
+(Bakery,Bistro,Vegan restaurant, false)	1
+(Bakery,Breakfast restaurant, false)	3
+(Bakery,Breakfast restaurant,Brunch restaurant,Cafe,Caterer,Coffee shop,Restaurant,Sandwich shop,Spanish restaurant, false)	1
+(Bakery,Breakfast restaurant,Brunch restaurant,Coffee shop,Sandwich shop, false)	1
+(Bakery,Breakfast restaurant,Cafe, false)	1
+(Bakery,Breakfast restaurant,Cafeteria,Cake shop,Coffee store,Cookie shop,Deli,Ice cream shop,Restaurant,Tea house, false)	1
+(Bakery,Breakfast restaurant,Cocktail bar,Coffee shop,Espresso bar,Sandwich shop,Takeout restaurant, false)	1
+(Bakery,Breakfast restaurant,Coffee shop,Pastry shop,Sandwich shop, false)	1
+(Bakery,Breakfast restaurant,Diner,Latin American restaurant, false)	1
+(Bakery,Cake shop,Coffee shop, false)	1
+(Bakery,Cake shop,Cupcake shop, false)	1
+(Bakery,Cake shop,Service establishment,Wedding bakery,Wholesale bakery, false)	1
+(Bakery,Candy store,Caterer,Ice cream shop, false)	2
+(Bakery,Caterer,Party store,Wedding bakery, false)	1
+(Bakery,Clothing store,Department store,Electronics store,Furniture store,Grocery store,Hardware store,Home goods store,Sporting goods store,Toy store, false)	12
+(Bakery,Coffee shop,Ice cream shop,Pastry shop, false)	1
+(Bakery,Dessert shop,Restaurant, false)	1
+(Bakery,Electronics store,Produce wholesaler,Warehouse club,Wholesale grocer, false)	7
+(Bakery,Fast food restaurant,Pretzel store, false)	1
+(Bakery,Restaurant, false)	1
+(Baking supply store,Grocery store, false)	1
+(Balloon store,Candy store,Costume store,Party store, false)	4
+(Bar, false)	90
+(Bar,Beach pavillion,Live music venue,Restaurant, false)	1
+(Bar,Bed & breakfast,Hamburger restaurant,Hotel,Inn, false)	1
+(Bar,Beer garden,Restaurant,Tapas restaurant, false)	1
+(Bar,Beer hall, false)	1
+(Bar,Bistro,Breakfast restaurant,Restaurant, false)	1
+(Bar,Bistro,Cafe,Restaurant, false)	1
+(Bar,Bistro,Caribbean restaurant,Hamburger restaurant,Latin American restaurant,Organic restaurant,Puerto Rican restaurant,Sandwich shop,Seafood restaurant, false)	1
+(Bar,Bistro,Cocktail bar,Gay bar,Live music bar,Peruvian restaurant,Restaurant,Tapas bar,Tapas restaurant, false)	1
+(Bar,Bistro,Restaurant, false)	1
+(Bar,Blues club,Farmers market,Hookah bar,Lottery shop,Night club,Puerto Rican restaurant,Restaurant,Sports bar,Tourist attraction, false)	1
+(Bar,Boutique,Guest house,Hotel,Restaurant, false)	1
+(Bar,Bowling alley,Bowling club,Bowling supply shop,Event venue,Grill,Leagues club,Restaurant,Sports bar,Video arcade, false)	1
+(Bar,Brasserie,French restaurant,Restaurant, false)	1
+(Bar,Breakfast restaurant,Brunch restaurant,Coffee shop,Hamburger restaurant, false)	1
+(Bar,Breakfast restaurant,Coffee shop,Sandwich shop, false)	1
+(Bar,Breakfast restaurant,Hookah bar,Lunch restaurant, false)	1
+(Bar,Breakfast restaurant,Restaurant, false)	1
+(Bar,Brunch restaurant,Caribbean restaurant,Cocktail bar,Live music bar,Meat dish restaurant,Puerto Rican restaurant,Restaurant,Seafood restaurant, false)	1
+(Bar,Brunch restaurant,Casino,Dance club,Live music venue,Restaurant, false)	1
+(Bar,Brunch restaurant,Cocktail bar,Dessert restaurant,Family restaurant,Italian restaurant,Lunch restaurant,Meat dish restaurant,Vegetarian restaurant,Wine bar, false)	1
+(Bar,Brunch restaurant,Cocktail bar,Gastropub,Mexican restaurant,Restaurant, false)	1
+(Bar,Brunch restaurant,Cocktail bar,Restaurant, false)	1
+(Bar,Brunch restaurant,Coffee shop,Gluten-free restaurant,Puerto Rican restaurant,Vegan restaurant,Vegetarian restaurant, false)	1
+(Bar,Brunch restaurant,Dominican restaurant,Meal delivery,Restaurant,Takeout restaurant, false)	1
+(Bar,Burrito restaurant,Cocktail bar,Family restaurant,Lunch restaurant,Mexican restaurant,Restaurant,Taco restaurant, false)	1
+(Bar,Cafe,Club,Pool hall, false)	1
+(Bar,Cafe,Cocktail bar,Coffee shop,Restaurant,Steak house,Sushi restaurant,Teppanyaki restaurant,Wine bar, false)	1
+(Bar,Cafe,Dive shop,Hotel,Puerto Rican restaurant,Resort hotel,Restaurant,Spa,Water sports equipment rental service,Wedding venue, false)	1
+(Bar,Cafe,Puerto Rican restaurant, false)	1
+(Bar,Cafeteria,Puerto Rican restaurant,Restaurant, false)	1
+(Bar,Caribbean restaurant,Cocktail bar,Coffee shop,Greek restaurant,Hamburger restaurant,Puerto Rican restaurant,Store,Sushi restaurant,Sweets and dessert buffet, false)	1
+(Bar,Caribbean restaurant,Cocktail bar,Family restaurant,Fusion restaurant,Puerto Rican restaurant,Steak house,Wine bar, false)	1
+(Bar,Caribbean restaurant,Cocktail bar,Fusion restaurant,Grill,Live music bar,Live music venue,Meat dish restaurant,Puerto Rican restaurant, false)	1
+(Bar,Caribbean restaurant,Crab house,Puerto Rican restaurant,Restaurant,Seafood restaurant, false)	1
+(Bar,Caribbean restaurant,Creole restaurant,Puerto Rican restaurant,Restaurant,Seafood restaurant, false)	1
+(Bar,Caribbean restaurant,Cuban restaurant, false)	1
+(Bar,Caribbean restaurant,Cuban restaurant,Puerto Rican restaurant, false)	1
+(Bar,Caribbean restaurant,Hookah bar,Seafood restaurant, false)	1
+(Bar,Caribbean restaurant,Nuevo Latino restaurant,Puerto Rican restaurant, false)	1
+(Bar,Caribbean restaurant,Puerto Rican restaurant, false)	1
+(Bar,Casino,Convention center,Hotel,Restaurant, false)	1
+(Bar,Catering food and drink supplier,Spanish restaurant, false)	1
+(Bar,Cigar shop,Convenience store,Hookah store,Lottery retailer,Vaporizer store, false)	1
+(Bar,Cigar shop,Jazz club,Lounge, false)	1
+(Bar,Cigar shop,Lounge, false)	1
+(Bar,Club, false)	1
+(Bar,Club,Gay bar,Hookah bar,Lounge,Night club,Pizza restaurant,Restaurant, false)	1
+(Bar,Club,Resort hotel,Restaurant, false)	1
+(Bar,Cocktail bar, false)	2
+(Bar,Cocktail bar,Creole restaurant,Event venue,Grill,Historical landmark,Italian restaurant,Puerto Rican restaurant,Seafood restaurant,Wedding venue, false)	1
+(Bar,Cocktail bar,Dance club,Gastropub,Tapas bar, false)	1
+(Bar,Cocktail bar,Family restaurant,Grill,Lunch restaurant,Meat dish restaurant,Restaurant,Seafood restaurant,Steak house, false)	1
+(Bar,Cocktail bar,Family restaurant,Italian restaurant,Lunch restaurant,Pizza restaurant,Restaurant,Wine bar, false)	1
+(Bar,Cocktail bar,Live music bar,Night club,Pizza restaurant,Restaurant,Salsa classes, false)	1
+(Bar,Cocktail bar,Restaurant, false)	1
+(Bar,Coffee shop,Dessert shop,Ice cream shop, false)	1
+(Bar,Coffee shop,Laundromat,Luggage storage facility, false)	1
+(Bar,Comedy club,Dinner theater,Piano bar,Pub,Wine club, false)	1
+(Bar,Commercial refrigerator supplier,Equipment supplier,Hotel,Hotel supply store,Restaurant supply store, false)	1
+(Bar,Convenience store,Pizza restaurant, false)	1
+(Bar,Convenience store,Pool hall, false)	1
+(Bar,Creole restaurant,Karaoke bar,Mexican restaurant,Restaurant, false)	1
+(Bar,Creole restaurant,Mexican restaurant, false)	1
+(Bar,Dance club, false)	1
+(Bar,Dance club,Night club, false)	1
+(Bar,Disco club,Live music bar,Restaurant,Sushi restaurant, false)	1
+(Bar,Dominican restaurant,Puerto Rican restaurant,Sports bar, false)	1
+(Bar,Espresso bar,Restaurant,Snack bar, false)	1
+(Bar,Event venue,Latin American restaurant,Restaurant,Seafood restaurant,Sushi restaurant, false)	1
+(Bar,Event venue,Live music bar,Live music venue,Musical club,Restaurant, false)	1
+(Bar,Family restaurant,Italian restaurant,Pizza restaurant,Tapas restaurant, false)	2
+(Bar,Fast food restaurant,Restaurant, false)	1
+(Bar,Fast food restaurant,Restaurant,Sports bar, false)	1
+(Bar,Fusion restaurant,Mexican restaurant,Taco restaurant, false)	1
+(Bar,Gay bar, false)	1
+(Bar,Gay bar,Liquor store, false)	1
+(Bar,Grill,Restaurant, false)	1
+(Bar,Hamburger restaurant, false)	2
+(Bar,Historical society,Latin American restaurant,Musician,Puerto Rican restaurant, false)	1
+(Bar,Hookah bar, false)	1
+(Bar,Hookah bar,Restaurant, false)	1
+(Bar,Hotel, false)	1
+(Bar,Hotel,Marina,Night club,Outdoor swimming pool,Resort hotel,Restaurant,Seafood restaurant,Serviced accommodation, false)	1
+(Bar,Karaoke bar, false)	1
+(Bar,Karaoke bar,Liquor store,Live music venue, false)	1
+(Bar,Latin American restaurant,Musical club,Puerto Rican restaurant,Restaurant,Salsa bar, false)	1
+(Bar,Live music bar,Tapas bar,Tapas restaurant, false)	1
+(Bar,Lounge, false)	1
+(Bar,Lounge,Restaurant, false)	1
+(Bar,Lounge,Sports bar, false)	1
+(Bar,Lounge,Sushi restaurant, false)	1
+(Bar,Mexican restaurant,Restaurant,Tex-Mex restaurant, false)	1
+(Bar,Museum,Night club,Park,Vacation home rental agency, false)	1
+(Bar,Night club, false)	1
+(Bar,Performing arts theater, false)	1
+(Bar,Puerto Rican restaurant, false)	2
+(Bar,Puerto Rican restaurant,Restaurant,Steak house, false)	1
+(Bar,Restaurant, false)	17
+(Bar,Restaurant,Tex-Mex restaurant, false)	1
+(Bar,Restaurant,Tourist attraction, false)	1
+(Bar,Seafood restaurant, false)	1
+(Bar,Social club, false)	1
+(Bar,Spa,Vietnamese restaurant, false)	1
+(Bar,Sports bar, false)	2
+(Barbecue restaurant, false)	10
+(Barbecue restaurant,Cafeteria, false)	1
+(Barbecue restaurant,Fast food restaurant, false)	7
+(Barber shop,Brake shop,Car detailing service,Fast food restaurant,Mechanic,Oil change service,Oil store,Tire shop,Transmission shop, false)	1
+(Barber shop,Cocktail bar, false)	1
+(Barber shop,Entertainment agency,Graphic designer,Music management and promotion,Music producer,Musician,Photography studio,Pizza restaurant,Pizza takeaway,Recording studio, false)	1
+(Barber shop,Farmers market,Juice shop,Souvenir store, false)	1
+(Beauty salon,Bistro,Hairdresser, false)	1
+(Beauty salon,Cocktail bar,Nail salon,Spa, false)	1
+(Beauty supply store,Beer store,Convenience store,Cosmetics store,Drug store,Greeting card shop,Liquor store,Perfume store,Stationery store,Vitamin & supplements store, false)	4
+(Beauty supply store,Convenience store,Cosmetics store,Drug store,Greeting card shop,Perfume store,Stationery store, false)	33
+(Beauty supply store,Convenience store,Cosmetics store,Drug store,Greeting card shop,Perfume store,Stationery store,Vitamin & supplements store, false)	1
+(Bed & breakfast,Breakfast restaurant,Caribbean restaurant,Conference center,Hotel,International airport,Map store,Outdoor swimming pool,Tourist information center, false)	1
+(Bed & breakfast,Brunch restaurant,Lunch restaurant, false)	1
+(Bed & breakfast,Hotel,Vegetarian restaurant, false)	1
+(Beer distributor,Beer garden,Brewery,Event venue,Live music venue,Restaurant, false)	1
+(Beer garden,Beer hall,Craft store,Pizza restaurant, false)	1
+(Beer garden,Coffee shop, false)	1
+(Beer store,Breakfast restaurant,Coffee shop,Fast food restaurant,Health food restaurant,Restaurant,Vegan restaurant,Vegetarian restaurant, false)	1
+(Bistro,Bouncy castle hire,Childrens amusement center,Childrens party service,Party equipment rental service,Pizza restaurant,Rock climbing, false)	1
+(Bistro,Breakfast restaurant,Brunch restaurant,Cocktail bar,Family restaurant,Salad shop,Tea house,Wine bar, false)	1
+(Bistro,Breakfast restaurant,Restaurant, false)	1
+(Bistro,Brunch restaurant,Cafe,Cocktail bar,Deli,Hamburger restaurant,Live music bar,Pizza restaurant, false)	1
+(Bistro,Coffee shop,Ice cream shop, false)	1
+(Bistro,Piano bar,Restaurant, false)	1
+(Boat tour agency,Puerto Rican restaurant,Sightseeing tour agency,Tour agency,Transportation service, false)	1
+(Book store,Cafeteria, false)	1
+(Boutique,Wellness center, false)	1
+(Box lunch supplier,Sandwich shop, false)	1
+(Brazilian restaurant,Latin American restaurant,Meat dish restaurant,Restaurant,South American restaurant,Steak house, false)	1
+(Brazilian restaurant,Restaurant,Steak house, false)	1
+(Breakfast restaurant, false)	5
+(Breakfast restaurant,Brunch restaurant, false)	1
+(Breakfast restaurant,Brunch restaurant,Buffet restaurant,Lunch restaurant,Puerto Rican restaurant,Restaurant, false)	1
+(Breakfast restaurant,Brunch restaurant,Cafe, false)	1
+(Breakfast restaurant,Brunch restaurant,Cafe,Coffee shop,Donut shop,Lunch restaurant,Restaurant,Service establishment,Vegan restaurant,Vegetarian cafe and deli, false)	1
+(Breakfast restaurant,Brunch restaurant,Cafe,Coffee shop,Lunch restaurant,Tea house, false)	1
+(Breakfast restaurant,Brunch restaurant,Cafe,Coffee shop,Lunch restaurant,Tea store, false)	1
+(Breakfast restaurant,Brunch restaurant,Cafe,Coffee shop,Restaurant, false)	1
+(Breakfast restaurant,Brunch restaurant,Cafe,Lunch restaurant, false)	1
+(Breakfast restaurant,Brunch restaurant,Cocktail bar,Coffee shop,Hamburger restaurant,Lunch restaurant,Restaurant,Sandwich shop, false)	1
+(Breakfast restaurant,Brunch restaurant,Cocktail bar,Peruvian restaurant,Puerto Rican restaurant,Restaurant, false)	1
+(Breakfast restaurant,Brunch restaurant,Coffee shop, false)	1
+(Breakfast restaurant,Brunch restaurant,Coffee shop,Coffee store,Lunch restaurant,Restaurant,Vegan restaurant, false)	1
+(Breakfast restaurant,Brunch restaurant,Espresso bar,Health food restaurant,Lunch restaurant,Organic restaurant,Vegan restaurant,Vegetarian cafe and deli, false)	1
+(Breakfast restaurant,Brunch restaurant,Ice cream shop, false)	1
+(Breakfast restaurant,Cafe, false)	1
+(Breakfast restaurant,Cafe,Coffee shop, false)	2
+(Breakfast restaurant,Cafe,Coffee shop,Lunch restaurant,Pastry shop, false)	1
+(Breakfast restaurant,Cafe,Coffee shop,Sandwich shop, false)	1
+(Breakfast restaurant,Cafe,Lunch restaurant, false)	1
+(Breakfast restaurant,Cafeteria,Restaurant, false)	1
+(Breakfast restaurant,Chicken restaurant,Fast food restaurant,Restaurant, false)	2
+(Breakfast restaurant,Chicken restaurant,Restaurant, false)	5
+(Breakfast restaurant,Club,Energy supplier,Health food restaurant,Juice shop,Natural goods store,Vitamin & supplements store, false)	1
+(Breakfast restaurant,Coffee roasters,Coffee shop, false)	2
+(Breakfast restaurant,Coffee roasters,Coffee shop,Equipment supplier,Espresso bar,Restaurant, false)	1
+(Breakfast restaurant,Coffee shop, false)	2
+(Breakfast restaurant,Coffee shop,Dessert shop,Ice cream shop,Sandwich shop, false)	1
+(Breakfast restaurant,Coffee shop,Fast food restaurant,Restaurant,Sandwich shop, false)	5
+(Breakfast restaurant,Coffee shop,Fast food restaurant,Sandwich shop, false)	2
+(Breakfast restaurant,Coffee shop,Lunch restaurant, false)	1
+(Breakfast restaurant,Coffee store, false)	1
+(Breakfast restaurant,Coffee store,Fast food restaurant,Restaurant,Sandwich shop, false)	3
+(Breakfast restaurant,Creole restaurant,Puerto Rican restaurant, false)	1
+(Breakfast restaurant,Deli,Puerto Rican restaurant, false)	1
+(Breakfast restaurant,Diner, false)	2
+(Breakfast restaurant,Diner,Restaurant, false)	1
+(Breakfast restaurant,Fast food restaurant, false)	12
+(Breakfast restaurant,Fast food restaurant,Hamburger restaurant, false)	3
+(Breakfast restaurant,Fast food restaurant,Hamburger restaurant,Restaurant, false)	1
+(Breakfast restaurant,Fast food restaurant,Mexican restaurant, false)	1
+(Breakfast restaurant,Fast food restaurant,Mexican restaurant,Restaurant, false)	1
+(Breakfast restaurant,Fast food restaurant,Restaurant, false)	7
+(Breakfast restaurant,French restaurant, false)	2
+(Breakfast restaurant,Puerto Rican restaurant,Restaurant,Seafood restaurant, false)	1
+(Breakfast restaurant,Steak house, false)	1
+(Brewery,Lunch restaurant,Peruvian restaurant,Wine store, false)	1
+(Brewpub, false)	1
+(Brunch restaurant, false)	4
+(Brunch restaurant,Cafe,Clothing store,Dessert shop,Health food restaurant,Jewelry designer,Juice shop,Lunch restaurant,Swimwear store, false)	1
+(Brunch restaurant,Caribbean restaurant,Cocktail bar,Coffee shop,Dessert shop,Fusion restaurant,Lunch restaurant,Puerto Rican restaurant,Steak house,Vegetarian cafe and deli, false)	1
+(Brunch restaurant,Chocolate shop,Lunch restaurant,Restaurant,Tapas restaurant, false)	1
+(Brunch restaurant,Cocktail bar,Fusion restaurant,Restaurant, false)	1
+(Brunch restaurant,Cocktail bar,Lunch restaurant,Restaurant,Wine bar, false)	1
+(Brunch restaurant,Cocktail bar,Restaurant,Tapas restaurant,Wine bar, false)	1
+(Brunch restaurant,Coffee shop,Internet cafe, false)	1
+(Brunch restaurant,Family restaurant,Lunch restaurant,Vegan restaurant,Vegetarian restaurant, false)	1
+(Brunch restaurant,Health food restaurant,Lunch restaurant,Organic restaurant,Restaurant,Vegan restaurant, false)	1
+(Brunch restaurant,Puerto Rican restaurant, false)	1
+(Brunch restaurant,Restaurant, false)	3
+(Bubble tea store,Chinese restaurant,Dim sum restaurant,Sushi restaurant, false)	1
+(Bubble tea store,Dessert shop,Ice cream shop, false)	1
+(Buffet restaurant,Caribbean restaurant,Restaurant, false)	1
+(Butcher shop deli, false)	2
+(Butcher shop,Restaurant, false)	2
+(Cafe, false)	20
+(Cafe,Cafeteria,Liquor store,Restaurant, false)	1
+(Cafe,Cocktail bar,Hookah bar,Hookah store,Lounge,Night club,Tobacco shop,Vaporizer store,Vitamin & supplements store, false)	1
+(Cafe,Coffee shop, false)	5
+(Cafe,Deli, false)	1
+(Cafe,Frozen yogurt shop, false)	1
+(Cafe,Puerto Rican restaurant,Restaurant, false)	1
+(Cafe,Restaurant, false)	1
+(Cafe,Restaurant,Takeout restaurant, false)	1
+(Cafeteria, false)	2
+(Cafeteria,Cake shop,Restaurant,Sweets and dessert buffet, false)	1
+(Cafeteria,Caribbean restaurant,Restaurant, false)	1
+(Cafeteria,Casino,Hotel,Restaurant, false)	1
+(Cafeteria,Cocktail bar,Day spa,Massage spa, false)	1
+(Cake shop, false)	1
+(Cake shop,Dessert restaurant,Frozen yogurt shop,Ice cream shop, false)	9
+(Candy store,Coffee shop, false)	1
+(Candy store,Event planner,Gift shop,Party planner,Party store, false)	1
+(Cannabis store,Cigar shop,Convenience store,Incense supplier,Tobacco shop,Vaporizer store, false)	1
+(Car inspection station,Convenience store,Gas station,Oil change service,Tire shop, false)	1
+(Car repair and maintenance service,Oil change service, false)	1
+(Caribbean restaurant, false)	4
+(Caribbean restaurant,Cocktail bar,Live music bar,Puerto Rican restaurant,Restaurant,Steak house, false)	1
+(Caribbean restaurant,Coffee shop,Health food restaurant,Latin American restaurant,Restaurant,Vegan restaurant,Vegetarian cafe and deli,Vegetarian restaurant, false)	1
+(Caribbean restaurant,Creole restaurant,Puerto Rican restaurant,Seafood restaurant,Steak house, false)	1
+(Caribbean restaurant,Cuban restaurant, false)	1
+(Caribbean restaurant,Cuban restaurant,Latin American restaurant,Puerto Rican restaurant,Restaurant,Spanish restaurant, false)	1
+(Caribbean restaurant,Cuban restaurant,Puerto Rican restaurant, false)	1
+(Caribbean restaurant,Dominican restaurant,Event venue,Puerto Rican restaurant,Restaurant, false)	1
+(Caribbean restaurant,Event planner,Event venue,Family restaurant,Puerto Rican restaurant,Seafood restaurant, false)	1
+(Caribbean restaurant,Fusion restaurant,Lounge,Restaurant, false)	1
+(Caribbean restaurant,Grill, false)	1
+(Caribbean restaurant,Health food store,Vegan restaurant,Vegetarian restaurant, false)	1
+(Caribbean restaurant,Latin American restaurant,Puerto Rican restaurant, false)	1
+(Caribbean restaurant,Mexican restaurant, false)	1
+(Caribbean restaurant,Puerto Rican restaurant,Restaurant, false)	1
+(Caribbean restaurant,Puerto Rican restaurant,Seafood restaurant,Spanish restaurant, false)	1
+(Caribbean restaurant,Restaurant, false)	3
+(Caribbean restaurant,Restaurant,Seafood restaurant,Tapas restaurant, false)	1
+(Caribbean restaurant,Seafood restaurant, false)	3
+(Caribbean restaurant,Tapas restaurant, false)	1
+(Carvery,Cocktail bar,Seafood restaurant,Spanish restaurant,Steak house,Tapas restaurant,Wine bar, false)	1
+(Cash and carry wholesaler,Grocery store, false)	1
+(Caterer, false)	1
+(Caterer,Chocolate shop,Dessert shop,Florist,Gift basket store,Gift shop,Grocery store,Juice shop, false)	1
+(Caterer,Cooking class,Function room facility,School center,Shared-use commercial kitchen, false)	1
+(Caterer,Fast food restaurant,Restaurant,Sandwich shop,Takeout restaurant, false)	6
+(Catering food and drink supplier,Pizza delivery, false)	1
+(Cheese shop,Tapas restaurant,Wine bar, false)	1
+(Chicken restaurant, false)	7
+(Chicken restaurant,Fast food restaurant, false)	12
+(Chicken restaurant,Fast food restaurant,Restaurant, false)	8
+(Chicken restaurant,Restaurant, false)	13
+(Chicken wings restaurant,Italian restaurant, false)	1
+(Chicken wings restaurant,Vegan restaurant,Vegetarian restaurant, false)	1
+(Childrens amusement center,Pizza restaurant, false)	1
+(Chinese restaurant, false)	59
+(Chinese restaurant,Fast food restaurant, false)	9
+(Chinese restaurant,Fast food restaurant,Takeout restaurant, false)	1
+(Chinese restaurant,Japanese restaurant,Restaurant, false)	1
+(Chinese restaurant,Japanese restaurant,Sushi restaurant, false)	1
+(Chinese restaurant,Restaurant, false)	3
+(Chinese restaurant,Sushi restaurant, false)	3
+(Chinese supermarket, false)	1
+(Chinese takeaway, false)	1
+(Chiropractor,Massage spa,Massage therapist,Medical office,Pain control clinic,Pain management physician,Physical therapist,Pregnancy care center,Sports massage therapist,Sports medicine physician, false)	1
+(Chocolate artisan,Chocolate cafe,Chocolate shop,Coffee store,Grocery store,Tea store, false)	1
+(Chocolate shop,Coffee shop,Gourmet grocery store,Restaurant supply store, false)	1
+(Churreria, false)	1
+(Cigar shop,Coffee shop,Hookah bar,Liquor store,Restaurant,Tapas bar,Tobacco shop, false)	1
+(Cigar shop,Coffee store,Tobacco shop, false)	1
+(Cigar shop,Electronic parts supplier,Electronics store,Health food store,Tobacco shop, false)	1
+(Cigar shop,Hookah bar,Lounge,Tobacco shop, false)	1
+(Cigar shop,Liquor store,Tobacco shop, false)	1
+(Clothing store,Convenience store,Vaporizer store, false)	1
+(Clothing store,Craft store,Department store,Electronics store,Furniture store,Grocery store,Hardware store,Home goods store,Sporting goods store,Toy store, false)	5
+(Clothing store,Hotel supply store,Industrial design company,Pharmaceutical products wholesaler,Pharmacy,Shelving store,Shop supermarket furniture store,Store equipment supplier,Supermarket,Wine wholesaler and importer, false)	1
+(Club, false)	6
+(Club,Cocktail bar,Dance club,Disco club,Event venue,Live music venue,Night club, false)	1
+(Club,Convention center,Event venue,Restaurant,Wedding venue, false)	1
+(Club,Gym, false)	1
+(Club,Horse boarding stable, false)	1
+(Club,Sailing school, false)	1
+(Cocktail bar, false)	3
+(Cocktail bar,Cuban restaurant, false)	1
+(Cocktail bar,Function room facility,Hotel,Outdoor swimming pool,Restaurant,Wedding buffet,Wedding venue, false)	1
+(Cocktail bar,Italian restaurant,Pasta shop,Pizza restaurant,Pizza takeaway,Southern Italian restaurant,Tapas bar,Wine bar, false)	1
+(Cocktail bar,Italian restaurant,Pizza restaurant,Restaurant, false)	1
+(Cocktail bar,Live music venue,Restaurant, false)	1
+(Cocktail bar,Mexican restaurant,Pool billard club,Wine cellar, false)	1
+(Cocktail bar,Puerto Rican restaurant, false)	1
+(Cocktail bar,Puerto Rican restaurant,Restaurant, false)	1
+(Cocktail bar,Restaurant, false)	3
+(Cocktail bar,Sushi restaurant, false)	1
+(Cocktail bar,Tapas bar, false)	1
+(Cocktail bar,Wine bar, false)	1
+(Coffee roasters, false)	1
+(Coffee roasters,Service establishment, false)	1
+(Coffee shop, false)	21
+(Coffee shop,Coffee store, false)	1
+(Coffee shop,Community center,Dance club,Gay bar,Performing arts group,Restaurant, false)	1
+(Coffee shop,Deli,Latin American restaurant,Sandwich shop,Soup restaurant, false)	1
+(Coffee shop,Dessert shop,Ice cream shop, false)	1
+(Coffee shop,Dog cafe,Dog day care center,Dog park,Dog trainer,Pet supply store,Restaurant, false)	1
+(Coffee shop,Facial spa,Gym,Gynecologist,Massage spa,Medical office,Medical spa,Nail salon,Sauna,Spa and health club, false)	1
+(Coffee shop,Health food restaurant,Juice shop,Vegan restaurant,Vegetarian restaurant, false)	1
+(Coffee shop,Mens clothing store, false)	1
+(Coffee shop,Pastry shop, false)	1
+(Coffee shop,Restaurant, false)	4
+(Coffee shop,Restaurant,Tea store, false)	1
+(Coffee shop,Sandwich shop, false)	1
+(Coffee shop,Tattoo shop, false)	1
+(Coffee shop,Vegan restaurant, false)	1
+(Coffee stand,Crêperie,Ice cream shop, false)	1
+(Coffee store, false)	1
+(Coffee store,Food court,Fried chicken takeaway,Hamburger restaurant,Ice cream shop,Mexican restaurant,Pizza restaurant,Raw food restaurant,Restaurant,Venezuelan restaurant, false)	1
+(Computer repair service,Electronics store,Grocery store, false)	1
+(Concert hall,Puerto Rican restaurant,Restaurant, false)	1
+(Consultant,Internet cafe,Internet marketing service, false)	1
+(Convenience store, false)	6
+(Convenience store,Copy shop,Drug store,Service establishment,Supermarket, false)	1
+(Convenience store,Delivery service,Grocery delivery service,Meal delivery,Service establishment, false)	1
+(Convenience store,Electronics store,Gift shop,Store, false)	1
+(Convenience store,Gas station, false)	1
+(Convenience store,Gift shop,Tobacco shop,Vaporizer store, false)	1
+(Convenience store,Pharmacy, false)	1
+(Convenience store,Tourist attraction, false)	1
+(Cookie shop, false)	1
+(Copy shop,Parking lot,Print shop,Snack bar, false)	1
+(Corporate office,Coworking space, false)	1
+(Corporate office,Manufacturer, false)	1
+(Creole restaurant, false)	3
+(Creole restaurant,Diner,Latin American restaurant,Puerto Rican restaurant,Restaurant, false)	1
+(Creole restaurant,Restaurant, false)	1
+(Cuban restaurant,Puerto Rican restaurant, false)	1
+(DVD store,Movie rental kiosk,Movie rental store, false)	2
+(Dairy supplier,Delivery service,Distribution service,Food and beverage consultant,Food products supplier,Fruit and vegetable processing,Fruit and vegetable store,Fruit and vegetable wholesaler,Produce wholesaler,Warehouse, false)	1
+(Dance club,Disco club,Gay bar,Puerto Rican restaurant, false)	1
+(Dance pavillion, false)	1
+(Deli, false)	1
+(Deli,Italian restaurant,Pizza restaurant,Puerto Rican restaurant, false)	1
+(Delivery Chinese restaurant, false)	1
+(Delivery Chinese restaurant,Service establishment, false)	1
+(Delivery service, false)	1
+(Delivery service,Fast food restaurant,Pizza restaurant,Restaurant,Takeout restaurant,Vegetarian restaurant, false)	2
+(Delivery service,Italian restaurant,Pizza restaurant,Takeout restaurant, false)	1
+(Delivery service,Restaurant,Takeout restaurant, false)	4
+(Dessert restaurant,Dessert shop,Frozen dessert supplier,Health food restaurant,Ice cream shop,Juice shop,Soft drinks shop, false)	1
+(Dessert shop, false)	2
+(Dessert shop,Sundae restaurant, false)	1
+(Diesel fuel supplier,Gas station, false)	1
+(Diner, false)	2
+(Diner,Restaurant, false)	1
+(Dinner theater,Internet cafe,Movie studio,Performing arts theater, false)	1
+(Disco club, false)	4
+(Disco club,Night club, false)	1
+(Discount supermarket,Supermarket, false)	1
+(Distribution service,Grocery store, false)	1
+(Dominican restaurant,Mediterranean restaurant,Puerto Rican restaurant, false)	1
+(Dominican restaurant,Puerto Rican restaurant, false)	1
+(Down home cooking restaurant, false)	6
+(Espresso bar, false)	1
+(European restaurant,Pub,Restaurant,Spanish restaurant,Tapas bar,Tapas restaurant, false)	1
+(Event venue,Spanish restaurant,Wedding venue, false)	1
+(Family restaurant, false)	1
+(Family restaurant,Food court,Restaurant, false)	1
+(Family restaurant,Italian restaurant,Pizza delivery,Pizza restaurant, false)	1
+(Family restaurant,Latin American restaurant,Seafood restaurant, false)	1
+(Family restaurant,Mexican restaurant, false)	1
+(Family restaurant,Puerto Rican restaurant,Restaurant, false)	1
+(Family restaurant,Restaurant,Social club,Sports nutrition store,Weight loss service, false)	1
+(Farmers market,Fresh food market,Health food restaurant,Health food store,Restaurant,Vegan restaurant, false)	1
+(Fast food restaurant, false)	31
+(Fast food restaurant,Hamburger restaurant, false)	4
+(Fast food restaurant,Hamburger restaurant,Restaurant, false)	1
+(Fast food restaurant,Italian restaurant,Pizza restaurant, false)	1
+(Fast food restaurant,Mexican restaurant, false)	4
+(Fast food restaurant,Pizza delivery,Pizza restaurant, false)	1
+(Fast food restaurant,Pizza delivery,Pizza restaurant,Pizza takeaway, false)	6
+(Fast food restaurant,Pizza delivery,Pizza restaurant,Pizza takeaway,Restaurant, false)	2
+(Fast food restaurant,Pizza restaurant,Restaurant,Takeout restaurant,Vegetarian restaurant, false)	7
+(Fast food restaurant,Pizza takeaway, false)	1
+(Fast food restaurant,Restaurant, false)	52
+(Fast food restaurant,Restaurant,Sandwich shop, false)	1
+(Fast food restaurant,Restaurant,Sandwich shop,Takeout restaurant, false)	8
+(Fast food restaurant,Sandwich shop, false)	3
+(Fast food restaurant,Seafood restaurant, false)	1
+(Fast food restaurant,Steak house, false)	1
+(Fast food restaurant,Taco restaurant, false)	2
+(Fine dining restaurant, false)	1
+(Fine dining restaurant,French restaurant,Restaurant,Wine bar, false)	1
+(Fine dining restaurant,Organic restaurant,Restaurant,Wine bar, false)	1
+(Fine dining restaurant,Puerto Rican restaurant,Restaurant, false)	1
+(Fine dining restaurant,Restaurant, false)	1
+(Fine dining restaurant,Restaurant,Wine bar, false)	1
+(Fine dining restaurant,Spanish restaurant, false)	1
+(Fish store, false)	1
+(Fish store,Goldfish store,Pet store,Pet supply store,Reptile store,Tropical fish store, false)	4
+(Fitness center,Health consultant,Health food store,Nutritionist,Sports nutrition store, false)	1
+(Food court,Restaurant, false)	1
+(French restaurant, false)	4
+(Fresh food market, false)	1
+(Frozen yogurt shop,Health food restaurant,Juice shop,Restaurant, false)	1
+(Fruit parlor,Health food store,Ice cream shop, false)	1
+(Fruit parlor,Soft drinks shop, false)	1
+(Fusion restaurant, false)	1
+(Gas company,Gas station, false)	1
+(Gas company,Gas station,Legal services,Logistics service,Mover,Oil refinery,Propane supplier,Shipping company,Towing service,Transportation service, false)	1
+(Gas station, false)	81
+(Gas station,Oil change service, false)	2
+(Gay bar, false)	1
+(General store, false)	2
+(General store,Service establishment, false)	1
+(Gift shop, false)	1
+(Gift shop,Grocery store,Handicraft school,Health and beauty shop,Pharmacy,Winery, false)	1
+(Gourmet grocery store,Grocery store,Meat products, false)	1
+(Gourmet grocery store,Supermarket, false)	1
+(Greek restaurant, false)	1
+(Greenhouse,Health counselor,Health spa,Natural goods store,Raw food restaurant,Retreat center,Wellness center,Wellness program, false)	1
+(Grill, false)	1
+(Grill,Hamburger restaurant,Restaurant, false)	1
+(Grill,Pizza restaurant,Restaurant, false)	1
+(Grocery delivery service,Grocery store,Supermarket, false)	1
+(Grocery store, false)	29
+(Grocery store,Liquor store, false)	1
+(Grocery store,Post office, false)	1
+(Grocery store,Store, false)	1
+(Grocery store,Supermarket, false)	6
+(Gyro restaurant, false)	1
+(Hamburger restaurant, false)	20
+(Hamburger restaurant,Pizza restaurant,Sports bar, false)	1
+(Hamburger restaurant,Restaurant, false)	3
+(Hamburger restaurant,Seafood restaurant, false)	1
+(Handicraft,Wine bar, false)	1
+(Hawaiian restaurant,Sushi restaurant, false)	1
+(Health consultant,Health food store,Nutritionist,Weight loss service, false)	6
+(Health food restaurant, false)	6
+(Health food restaurant,Health food store,Natural goods store,Organic food store,Vitamin & supplements store, false)	1
+(Health food restaurant,Health food store,Restaurant,Vegan restaurant, false)	1
+(Health food restaurant,Juice shop,Vegan restaurant,Vegetarian restaurant, false)	2
+(Health food restaurant,Vegan restaurant, false)	1
+(Health food store, false)	10
+(Health food store,Herb shop,Herbal medicine store,Herbalist,Research and product development,Tourist attraction, false)	1
+(Health food store,Home goods store, false)	1
+(Health food store,Natural goods store,Vitamin & supplements store, false)	1
+(Health food store,Supermarket, false)	1
+(Home goods store, false)	1
+(Hookah bar,Hookah store,Lounge,Night club,Sports bar, false)	1
+(Hookah bar,Tobacco shop, false)	1
+(Hotel, false)	1
+(Hotel,Restaurant,Retreat center,Vegan restaurant,Vegetarian restaurant,Yoga retreat center, false)	1
+(Ice cream shop, false)	30
+(Ice cream shop,Restaurant, false)	1
+(Ice cream shop,Restaurant,Tea store, false)	1
+(Ice cream shop,Sundae restaurant, false)	2
+(Indian restaurant, false)	1
+(Irish pub, false)	2
+(Italian restaurant, false)	29
+(Italian restaurant,Nuevo Latino restaurant,Restaurant, false)	1
+(Italian restaurant,Pizza delivery,Pizza restaurant,Pizza takeaway, false)	3
+(Italian restaurant,Pizza restaurant, false)	2
+(Italian restaurant,Pizza restaurant,Pizza takeaway, false)	4
+(Italian restaurant,Pizza restaurant,Restaurant,Seafood restaurant, false)	1
+(Italian restaurant,Restaurant, false)	11
+(Italian restaurant,Steak house, false)	1
+(Japanese restaurant, false)	9
+(Japanese restaurant,Mandarin restaurant, false)	1
+(Japanese restaurant,Pan-Asian restaurant,Sushi restaurant,Sushi takeaway,Takeout restaurant, false)	1
+(Japanese restaurant,Sushi restaurant, false)	2
+(Japanese steakhouse,Sushi restaurant, false)	1
+(Jewish restaurant,Kosher grocery store,Kosher restaurant,Restaurant, false)	1
+(Karaoke bar, false)	1
+(Kinesiologist,Vitamin & supplements store, false)	1
+(Korean barbecue restaurant, false)	1
+(Korean restaurant,Mexican restaurant, false)	1
+(Latin American restaurant, false)	2
+(Latin American restaurant,Puerto Rican restaurant, false)	1
+(Latin American restaurant,Puerto Rican restaurant,Restaurant, false)	1
+(Lebanese restaurant, false)	1
+(Liquor store, false)	2
+(Live music venue,Night club, false)	1
+(Lounge,Steak house, false)	1
+(Market, false)	5
+(Market,Pharmacy, false)	1
+(Meat dish restaurant,Puerto Rican restaurant,Seafood restaurant, false)	1
+(Mediterranean restaurant, false)	2
+(Mediterranean restaurant,Middle Eastern restaurant, false)	1
+(Mediterranean restaurant,Middle Eastern restaurant,Turkish restaurant,Vegetarian restaurant, false)	1
+(Mediterranean restaurant,Restaurant, false)	1
+(Mediterranean restaurant,Wine bar, false)	1
+(Mexican grocery store, false)	1
+(Mexican restaurant, false)	68
+(Mexican restaurant,Puerto Rican restaurant,Sports bar, false)	1
+(Mexican restaurant,Restaurant, false)	5
+(Mexican restaurant,Sports bar, false)	1
+(Middle Eastern restaurant, false)	3
+(Middle Eastern restaurant,Restaurant, false)	1
+(Mobile caterer, false)	1
+(Natural goods store, false)	1
+(New American restaurant, false)	1
+(Night club, false)	27
+(Night club,Restaurant, false)	2
+(Nuevo Latino restaurant, false)	1
+(Organic restaurant, false)	1
+(Organic restaurant,Vegan restaurant,Vegetarian restaurant, false)	1
+(Peruvian restaurant, false)	1
+(Peruvian restaurant,Puerto Rican restaurant,Restaurant, false)	1
+(Pet store,Pet supply store, false)	1
+(Pharmacy,Supermarket, false)	2
+(Pizza delivery, false)	9
+(Pizza delivery,Pizza restaurant, false)	4
+(Pizza delivery,Pizza restaurant,Pizza takeaway, false)	4
+(Pizza delivery,Pizza takeaway, false)	9
+(Pizza delivery,Restaurant, false)	5
+(Pizza restaurant, false)	60
+(Pizza restaurant,Pizza takeaway, false)	1
+(Pizza restaurant,Pizza takeaway,Takeout restaurant, false)	1
+(Pizza restaurant,Puerto Rican restaurant, false)	1
+(Pizza restaurant,Puerto Rican restaurant,Restaurant,Sports bar, false)	1
+(Pizza restaurant,Restaurant, false)	8
+(Pizza restaurant,Steak house, false)	2
+(Pizza takeaway, false)	3
+(Pretzel store, false)	2
+(Produce market, false)	2
+(Pub, false)	4
+(Puerto Rican restaurant, false)	40
+(Puerto Rican restaurant,Restaurant, false)	9
+(Puerto Rican restaurant,Restaurant,Seafood restaurant, false)	1
+(Puerto Rican restaurant,Restaurant,Sushi restaurant,Sushi takeaway, false)	2
+(Puerto Rican restaurant,Restaurant,Vegetarian restaurant, false)	1
+(Puerto Rican restaurant,Rice restaurant, false)	1
+(Puerto Rican restaurant,Seafood restaurant, false)	3
+(Ramen restaurant,Restaurant, false)	1
+(Restaurant, false)	29
+(Restaurant,Sandwich shop, false)	1
+(Restaurant,Seafood restaurant, false)	5
+(Restaurant,Spanish restaurant, false)	3
+(Restaurant,Steak house, false)	1
+(Restaurant,Sushi restaurant, false)	2
+(Restaurant,Sushi restaurant,Takeout restaurant, false)	1
+(Restaurant,Tapas bar,Tapas restaurant, false)	1
+(Restaurant,Tex-Mex restaurant, false)	3
+(Restaurant,Turkish restaurant, false)	2
+(Restaurant,Vegan restaurant, false)	1
+(Restaurant,Vitamin & supplements store, false)	1
+(Restaurant,Wine bar, false)	2
+(Salsa bar, false)	1
+(Sandwich shop, false)	5
+(Seafood donburi restaurant, false)	1
+(Seafood market,Seafood restaurant, false)	1
+(Seafood restaurant, false)	22
+(Seafood restaurant,Steak house,Wine bar, false)	1
+(Service establishment,Wedding buffet,Wedding dress rental service,Wedding photographer,Wedding service, false)	1
+(Southern Italian restaurant, false)	1
+(Spanish restaurant, false)	5
+(Spanish restaurant,Tapas bar, false)	1
+(Sports bar, false)	13
+(Stand bar, false)	1
+(Steak house, false)	8
+(Store, false)	1
+(Store,Supermarket, false)	1
+(Sundae restaurant, false)	1
+(Supermarket, false)	54
+(Sushi restaurant, false)	19
+(Swiss restaurant, false)	1
+(Taco restaurant, false)	2
+(Takeout restaurant, false)	1
+(Tapas bar, false)	1
+(Tapas restaurant, false)	4
+(Tapas restaurant,Wine bar, false)	1
+(Thai restaurant, false)	2
+(Transportation service, false)	1
+(Turkish restaurant, false)	2
+(Vegan restaurant, false)	10
+(Vegan restaurant,Vegetarian restaurant, false)	1
+(Vegetarian restaurant, false)	7
+(Venezuelan restaurant, false)	1
+(Vitamin & supplements store, false)	1
+(Vitamin & supplements store,Wellness center,Wellness program, false)	1
+(Wine store, false)	5
+(Wine store,Wine wholesaler and importer, false)	1
+(Winery, false)	1
+

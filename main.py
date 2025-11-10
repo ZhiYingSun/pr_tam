@@ -47,7 +47,7 @@ def main():
     
     parser.add_argument(
         '--input', '-i',
-        default='data/processed/cleaned_restaurants.csv',
+        default='data/processed/doordash_filtered_restaurants.csv',
         help='Input CSV file path'
     )
     parser.add_argument(

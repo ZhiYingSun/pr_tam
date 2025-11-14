@@ -8,7 +8,7 @@ A high-performance Python application that matches restaurant data with Puerto R
 # Activate virtual environment
 source venv/bin/activate
 
-# Run complete pipeline (filtering is always applied)
+# Run complete pipeline 
 python main.py --limit 50
 
 # Process entire dataset

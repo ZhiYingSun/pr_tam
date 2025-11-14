@@ -50,7 +50,7 @@ class IncorporationSearcher:
             "corpName": business_name,
             "isWorkFlowSearch": False,
             "limit": limit,
-            "matchType": 3, # partial match
+            "matchType": 4,
             "onlyActive": True
         }
         

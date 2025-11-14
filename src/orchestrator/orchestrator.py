@@ -84,6 +84,7 @@ class PipelineOrchestrator:
                 # Return all matches even if validation failed
                 return match_results[0], None
 
+        # Step 3: Validate the selected match
         if selected_match:
             try:
                 validation_result = await self.validator.validate_match(selected_match)
@@ -307,16 +308,16 @@ class PipelineOrchestrator:
             return None
         
         # Find the most recent matched restaurants CSV
-        matched_files = list(output_path.glob("matched_restaurants_*.csv"))
-        if not matched_files:
+        validation_files = list(output_path.glob("matched_restaurants_*.csv"))
+        if not validation_files:
             return None
         
         # Use the most recent one
-        matched_file = sorted(matched_files, key=lambda p: p.stat().st_mtime, reverse=True)[0]
+        latest_validation_file = sorted(validation_files, key=lambda p: p.stat().st_mtime, reverse=True)[0]
         
         final_output_path = output_path / f"final_output_{timestamp}.csv"
         transform_result = self.report_generator.run(
-            input_csv_path=str(matched_file),
+            input_csv_path=str(latest_validation_file),
             output_csv_path=str(final_output_path),
             validation_csv_path=validation_file
         )

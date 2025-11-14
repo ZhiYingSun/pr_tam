@@ -45,7 +45,7 @@ class LLMValidator:
         """Constructs the prompt for OpenAI based on the match details."""
         restaurant = match.restaurant
         business = match.business
-
+        # TODO: tune this
         prompt = f"""
 Context: You are an expert in business data matching for Puerto Rico. Your task is to determine if a given restaurant (from Google Maps) and a business entity (from Puerto Rico incorporation documents) represent the same real-world entity.
 
@@ -195,7 +195,8 @@ Example JSON Output:
                 f"Postal: {'Yes' if match.postal_code_match else 'No'} | "
                 f"City: {'Yes' if match.city_match else 'No'}"
             )
-        
+
+        # TODO: tune this
         prompt = f"""You are evaluating 25 business candidates to find the best match for a restaurant.
 
 Restaurant: {restaurant.name}

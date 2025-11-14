@@ -16,7 +16,7 @@ class RestaurantMatcher:
     Matcher for restaurant records.
     """
     
-    def __init__(self, incorporation_searcher, openai_client=None):
+    def __init__(self, incorporation_searcher, openai_client):
         """
         Initialize restaurant matcher.
         
@@ -63,14 +63,12 @@ class RestaurantMatcher:
         Returns:
             Cleaned business name suitable for searching business registries
         """
-        if not self.openai_client:
-            logger.debug("No OpenAI client available, falling back to standard normalization")
-            return self._normalize_name(restaurant_name)
+        normalized_name = self._normalize_name(restaurant_name)
         
         try:
             prompt = f"""Extract the core business name from this restaurant name for searching a business registry.
 
-Restaurant name: "{restaurant_name}"
+Restaurant name: "{normalized_name}"
 
 Remove:
 - Location descriptors (e.g., "San Juan", "Miramar", "Plaza")

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Complete end-to-end pipeline for matching restaurants with PR incorporation documents
+Complete end-to-end pipeline for matching restaurants with incorporation documents and creating intelligence package
 """
 import os
 import sys
@@ -39,15 +39,14 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 def main():
-    """Main entry point."""
     parser = argparse.ArgumentParser(
-        description='Puerto Rico Restaurant Matcher - Complete Pipeline',
+        description='Intelligence Package Report Generator',
         formatter_class=argparse.RawDescriptionHelpFormatter
     )
     
     parser.add_argument(
         '--input', '-i',
-        default='data/Puerto Rico Data_ v1109_155.csv',
+        default='data/Puerto Rico Data_ v1109_50_without_LLC.csv',
         help='Input CSV file path'
     )
     parser.add_argument(
@@ -60,12 +59,6 @@ def main():
         type=int,
         default=50,
         help='Number of restaurants to process'
-    )
-    parser.add_argument(
-        '--threshold', '-t',
-        type=float,
-        default=70.0,
-        help='Name match threshold percentage'
     )
     parser.add_argument(
         '--exclusion-list',

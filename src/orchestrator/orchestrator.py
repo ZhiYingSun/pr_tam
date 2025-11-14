@@ -94,19 +94,6 @@ class PipelineOrchestrator:
         exclusion_list: Optional[str] = None,
         inclusion_list: Optional[str] = None
     ) -> PipelineResult:
-        """
-        Run the complete pipeline for all restaurants.
-        
-        Args:
-            input_csv: Path to input CSV file
-            output_dir: Output directory for results
-            limit: Optional limit on number of restaurants to process
-            exclusion_list: Path to exclusion list file
-            inclusion_list: Path to inclusion list file
-            
-        Returns:
-            Dictionary with complete pipeline results
-        """
         timestamp, output_path, start_time = self._initialize_pipeline_run(
             input_csv, output_dir, limit
         )

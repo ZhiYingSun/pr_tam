@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 
 from src.utils.loader import RestaurantLoader, CSVRestaurantLoader
 from src.utils.intermediate_match_csv_generator import generate_all_outputs, print_match_statistics
+from src.utils.business_type_filter import BusinessTypeFilter
 from src.models.models import MatchingConfig, RestaurantRecord, MatchResult, PipelineResult
 from src.models.validation_models import ValidationResult
 from src.matchers.matcher import RestaurantMatcher
@@ -89,7 +90,10 @@ class PipelineOrchestrator:
         self,
         input_csv: str,
         output_dir: str = "data/output",
-        limit: Optional[int] = None
+        limit: Optional[int] = None,
+        apply_business_filter: bool = True,
+        exclusion_list: Optional[str] = None,
+        inclusion_list: Optional[str] = None
     ) -> PipelineResult:
         """
         Run the complete pipeline for all restaurants.
@@ -98,17 +102,27 @@ class PipelineOrchestrator:
             input_csv: Path to input CSV file
             output_dir: Output directory for results
             limit: Optional limit on number of restaurants to process
+            apply_business_filter: Whether to apply business type filtering (default: True)
+            exclusion_list: Path to exclusion list file
+            inclusion_list: Path to inclusion list file
             
         Returns:
             Dictionary with complete pipeline results
         """
         timestamp, output_path, start_time = self._initialize_pipeline_run(
-            input_csv, output_dir, limit
+            input_csv, output_dir, limit, apply_business_filter
         )
+        
+        # Apply business type filtering by default
+        working_csv = input_csv
+        if apply_business_filter:
+            working_csv = self._apply_business_filter(
+                input_csv, output_path, timestamp, exclusion_list, inclusion_list
+            )
         
         # Load restaurants
         logger.info("Loading restaurants...")
-        restaurants = self.loader.load(input_csv, limit=limit)
+        restaurants = self.loader.load(working_csv, limit=limit)
         logger.info(f"Loaded {len(restaurants)} restaurants")
 
         async with self.searcher:
@@ -224,7 +238,8 @@ class PipelineOrchestrator:
         self,
         input_csv: str,
         output_dir: str,
-        limit: Optional[int]
+        limit: Optional[int],
+        apply_business_filter: bool = False
     ) -> Tuple[str, Path, datetime]:
         """
         Initialize pipeline run: setup paths, timestamps, and log configuration.
@@ -233,6 +248,7 @@ class PipelineOrchestrator:
             input_csv: Path to input CSV file
             output_dir: Output directory for results
             limit: Optional limit on number of restaurants
+            apply_business_filter: Whether business type filtering will be applied
             
         Returns:
             Tuple of (timestamp, output_path, start_time)
@@ -250,11 +266,92 @@ class PipelineOrchestrator:
         logger.info(f"  Output: {output_dir}")
         if limit:
             logger.info(f"  Limit: {limit} restaurants")
+        logger.info(f"  Business type filtering: {'enabled' if apply_business_filter else 'disabled'}")
         logger.info(f"  Validation: enabled")
         logger.info(f"  Transformation: enabled")
         logger.info("=" * 80)
         
         return timestamp, output_path, start_time
+    
+    def _apply_business_filter(
+        self,
+        input_csv: str,
+        output_path: Path,
+        timestamp: str,
+        exclusion_list: Optional[str],
+        inclusion_list: Optional[str]
+    ) -> str:
+        """
+        Apply business type filtering to the input CSV.
+        
+        Args:
+            input_csv: Path to input CSV file
+            output_path: Output directory path
+            timestamp: Timestamp for file naming
+            exclusion_list: Path to exclusion list file
+            inclusion_list: Path to inclusion list file
+            
+        Returns:
+            Path to filtered CSV file
+        """
+        logger.info("=" * 80)
+        logger.info("APPLYING BUSINESS TYPE FILTERING")
+        logger.info("=" * 80)
+        
+        if not exclusion_list or not inclusion_list:
+            raise ValueError("Both exclusion_list and inclusion_list are required for filtering")
+        
+        # Validate filter list files exist
+        exclusion_path = Path(exclusion_list)
+        inclusion_path = Path(inclusion_list)
+        
+        if not exclusion_path.exists():
+            raise FileNotFoundError(f"Exclusion list not found: {exclusion_list}")
+        if not inclusion_path.exists():
+            raise FileNotFoundError(f"Inclusion list not found: {inclusion_list}")
+        
+        logger.info(f"Exclusion list: {exclusion_list}")
+        logger.info(f"Inclusion list: {inclusion_list}")
+        logger.info("Logic: Remove if matches exclusion type AND does NOT match any inclusion type")
+        logger.info("-" * 80)
+        
+        try:
+            # Create filter with both exclusion and inclusion lists
+            filter_obj = BusinessTypeFilter(
+                exclusion_list_file=exclusion_list,
+                inclusion_list_file=inclusion_list
+            )
+            
+            # Create filtered output path
+            filtered_dir = output_path / "filtered"
+            filtered_dir.mkdir(parents=True, exist_ok=True)
+            filtered_csv = filtered_dir / f"filtered_businesses_{timestamp}.csv"
+            removed_csv = filtered_dir / f"removed_businesses_{timestamp}.csv"
+            
+            # Filter the file
+            result = filter_obj.filter_file(
+                input_file=input_csv,
+                output_file=str(filtered_csv),
+                removed_file=str(removed_csv)
+            )
+            
+            # Log summary
+            logger.info("-" * 80)
+            logger.info("FILTERING SUMMARY")
+            logger.info("-" * 80)
+            logger.info(f"Original records: {result.total_original:,}")
+            logger.info(f"Filtered (kept): {result.total_filtered:,}")
+            logger.info(f"Removed: {result.total_removed:,}")
+            logger.info(f"Removal rate: {(result.total_removed / result.total_original * 100):.1f}%")
+            logger.info(f"Filtered CSV: {filtered_csv}")
+            logger.info(f"Removed CSV: {removed_csv}")
+            logger.info("=" * 80)
+            
+            return str(filtered_csv)
+            
+        except Exception as e:
+            logger.error(f"Error during business type filtering: {e}", exc_info=True)
+            raise
     
     def _save_validation_results(
         self,

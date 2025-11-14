@@ -47,7 +47,7 @@ def main():
     
     parser.add_argument(
         '--input', '-i',
-        default='data/processed/doordash_filtered_restaurants.csv',
+        default='data/Puerto Rico Data_ v1109_155.csv',
         help='Input CSV file path'
     )
     parser.add_argument(
@@ -66,6 +66,21 @@ def main():
         type=float,
         default=70.0,
         help='Name match threshold percentage'
+    )
+    parser.add_argument(
+        '--skip-filter',
+        action='store_true',
+        help='Skip business type filtering (filtering is enabled by default)'
+    )
+    parser.add_argument(
+        '--exclusion-list',
+        default='src/misc/excluded_business_types.txt',
+        help='Path to exclusion list for business type filtering'
+    )
+    parser.add_argument(
+        '--inclusion-list',
+        default='src/misc/included_business_types.txt',
+        help='Path to inclusion list for business type filtering'
     )
     parser.add_argument(
         '--verbose', '-v',
@@ -120,10 +135,15 @@ def main():
     
     # Run pipeline
     try:
+        # Business filtering is enabled by default unless --skip-filter is used
+        apply_filter = not args.skip_filter
         result = asyncio.run(orchestrator.run(
             input_csv=str(input_path),
             output_dir=args.output,
-            limit=args.limit
+            limit=args.limit,
+            apply_business_filter=apply_filter,
+            exclusion_list=args.exclusion_list if apply_filter else None,
+            inclusion_list=args.inclusion_list if apply_filter else None
         ))
         if result.success:
             _log_processing_result(result)

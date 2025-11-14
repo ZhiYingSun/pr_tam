@@ -41,8 +41,11 @@ class IncorporationSearcher:
         """Async context manager exit - close ZyteClient session."""
         await self.zyte_client.close()
     
-    async def search_business(self, business_name: str, limit: int = 250) -> List[BusinessRecord]:
-        """Search for business by name using reverse engineered PR incorporation API."""
+    async def search_business(self, business_name: str, limit: int = 250) -> List[CorporationSearchRecord]:
+        """
+        Search for business by name using reverse engineered PR incorporation API.
+        Returns lightweight search records (no detailed GET calls).
+        """
         
         payload = {
             "cancellationMode": False,
@@ -69,37 +72,7 @@ class IncorporationSearcher:
             if response and response.response and response.response.records:
                 records = response.response.records
                 logger.info(f"Found {len(records)} records for '{business_name}'")
-                business_records = []
-                
-                # Get detailed information for each business
-                for record in records:
-                    try:
-                        business_entity_id = record.businessEntityId
-                        logger.debug(f"Search result for '{business_name}': corpName='{record.corpName}', businessEntityId={business_entity_id}")
-                        
-                        if business_entity_id:
-                            # Get detailed business information using registrationIndex
-                            registration_index = record.registrationIndex
-                            detailed_record = await self._get_business_details(business_entity_id, registration_index)
-                            if detailed_record:
-                                business_record = self._create_business_record_from_details(detailed_record)
-                                logger.debug(f"Successfully created detailed record for {business_entity_id}")
-                            else:
-                                # Fallback to search result if details fail
-                                business_record = self._create_business_record_from_search(record)
-                                logger.debug(f"Fell back to search result for {business_entity_id}")
-                        else:
-                            # Fallback to search result if no businessEntityId
-                            business_record = self._create_business_record_from_search(record)
-                            logger.debug(f"No businessEntityId, using search result")
-                        
-                        business_records.append(business_record)
-                        logger.debug(f"Created business record: {business_record.legal_name}")
-                    except Exception as e:
-                        logger.warning(f"Failed to create business record: {e}")
-                        continue
-                
-                return business_records
+                return records
             else:
                 logger.warning(f"No records found for '{business_name}'")
                 return []
@@ -232,6 +205,42 @@ class IncorporationSearcher:
             resident_agent_name=resident_agent_name,
             resident_agent_address=resident_agent_address,
         )
+    
+    async def get_business_details_for_records(self, records: List[CorporationSearchRecord]) -> List[BusinessRecord]:
+        """
+        Fetch detailed information for a list of search records.
+        This is called AFTER fuzzy matching to only fetch details for top candidates.
+        """
+        business_records = []
+        
+        for record in records:
+            try:
+                business_entity_id = record.businessEntityId
+                logger.debug(f"Fetching details for: corpName='{record.corpName}', businessEntityId={business_entity_id}")
+                
+                if business_entity_id:
+                    # Get detailed business information using registrationIndex
+                    registration_index = record.registrationIndex
+                    detailed_record = await self._get_business_details(business_entity_id, registration_index)
+                    if detailed_record:
+                        business_record = self._create_business_record_from_details(detailed_record)
+                        logger.debug(f"Successfully created detailed record for {business_entity_id}")
+                    else:
+                        # Fallback to search result if details fail
+                        business_record = self._create_business_record_from_search(record)
+                        logger.debug(f"Fell back to search result for {business_entity_id}")
+                else:
+                    # Fallback to search result if no businessEntityId
+                    business_record = self._create_business_record_from_search(record)
+                    logger.debug(f"No businessEntityId, using search result")
+                
+                business_records.append(business_record)
+                logger.debug(f"Created business record: {business_record.legal_name}")
+            except Exception as e:
+                logger.warning(f"Failed to create business record: {e}")
+                continue
+        
+        return business_records
     
     def _create_business_record_from_search(self, record: CorporationSearchRecord) -> BusinessRecord:
         return BusinessRecord(

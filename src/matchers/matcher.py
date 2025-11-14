@@ -185,18 +185,48 @@ Cleaned name:"""
     async def find_best_match(self, restaurant: RestaurantRecord) -> List[MatchResult]:
         """
         Searches for the top 25 matching business records for a given restaurant.
-        Uses OpenAI to clean the name before searching
+        Uses OpenAI to clean the name before searching.
         """
         search_query = await self._clean_name_with_openai(restaurant.name)
-        candidates = await self.incorporation_searcher.search_business(
+        search_records = await self.incorporation_searcher.search_business(
             search_query,
             limit=MatchingConfig.SEARCH_LIMIT
         )
         
+        if not search_records:
+            logger.info(f"No candidates found for '{restaurant.name}'")
+            return [MatchResult(
+                restaurant=restaurant,
+                business=None,
+                confidence_score=0.0,
+                match_type="none",
+                is_accepted=False,
+                name_score=0.0,
+                postal_code_match=False,
+                city_match=False,
+                match_reason="No candidates found"
+            )]
+        
+        # Step 1: Do fuzzy matching on corpName from lightweight search records
+        scored_records = []
+        for record in search_records:
+            if record.corpName:
+                name_score = self._calculate_name_similarity(restaurant.name, record.corpName)
+                scored_records.append((name_score, record))
+        
+        # Sort by fuzzy score and take top 3
+        scored_records.sort(key=lambda x: x[0], reverse=True)
+        top_3_records = [record for _, record in scored_records[:3]]
+        
+        logger.info(f"Fuzzy matched {len(search_records)} records, fetching details for top {len(top_3_records)}")
+        
+        # Step 2: Only fetch detailed info for top 3 fuzzy matches
+        detailed_businesses = await self.incorporation_searcher.get_business_details_for_records(top_3_records)
+        
+        # Step 3: Calculate final scores with detailed information
         all_matches: List[MatchResult] = []
         
-        # Calculate scores for all candidates
-        for candidate_business in candidates:
+        for candidate_business in detailed_businesses:
             name_score = self._calculate_name_similarity(restaurant.name, candidate_business.legal_name)
             
             current_score, match_reason, postal_code_match, city_match = \
@@ -220,13 +250,11 @@ Cleaned name:"""
             all_matches.append(match_result)
 
         all_matches.sort(key=lambda m: m.confidence_score, reverse=True)
-        top_matches = all_matches[:25]
         
-        if top_matches:
-            return top_matches
+        if all_matches:
+            return all_matches
         else:
-            logger.info(f"No candidates found for '{restaurant.name}'")
-            # Return a single MatchResult indicating no matches found
+            logger.info(f"No valid matches found for '{restaurant.name}'")
             return [MatchResult(
                 restaurant=restaurant,
                 business=None,
@@ -236,5 +264,5 @@ Cleaned name:"""
                 name_score=0.0,
                 postal_code_match=False,
                 city_match=False,
-                match_reason="No candidates found"
+                match_reason="No valid matches found"
             )]

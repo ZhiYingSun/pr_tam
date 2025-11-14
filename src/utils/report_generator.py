@@ -24,7 +24,8 @@ class ReportGenerator:
     def run(
         self,
         output_csv_path: str,
-        validation_csv_path: Optional[str] = None
+        validation_csv_path: Optional[str] = None,
+        filtered_csv_path: Optional[str] = None
     ) -> Dict:
         """
         Run the transformation pipeline.
@@ -32,63 +33,103 @@ class ReportGenerator:
         Args:
             output_csv_path: Path to save the transformed data
             validation_csv_path: Path to accepted matches CSV
+            filtered_csv_path: Path to filtered businesses CSV (includes all restaurants)
             
         Returns:
             Dictionary with transformation results
         """
         try:
-            # Use accepted matches file as primary source
-            if not validation_csv_path or not Path(validation_csv_path).exists():
-                logger.warning("No accepted matches file provided - cannot generate final report")
+            # Load filtered businesses as the base (all restaurants)
+            if not filtered_csv_path or not Path(filtered_csv_path).exists():
+                logger.warning("No filtered businesses file provided - cannot generate final report")
                 return {
                     'success': False,
-                    'error': 'Accepted matches file required',
+                    'error': 'Filtered businesses file required',
                     'output_file': None
                 }
             
-            logger.info(f"Loading accepted matches from {validation_csv_path}")
-            df = pd.read_csv(validation_csv_path)
-            logger.info(f"Loaded {len(df)} accepted matches")
+            logger.info(f"Loading filtered businesses from {filtered_csv_path}")
+            filtered_df = pd.read_csv(filtered_csv_path)
+            logger.info(f"Loaded {len(filtered_df)} filtered businesses")
             
-            if df.empty:
-                logger.warning("No accepted matches to transform")
+            if filtered_df.empty:
+                logger.warning("No filtered businesses to transform")
                 return {
                     'success': False,
-                    'error': 'No accepted matches',
+                    'error': 'No filtered businesses',
                     'output_file': None
                 }
             
-            # Transform data directly from accepted matches CSV (no joins needed)
+            # Load accepted matches (optional - will be left-joined)
+            matches_df = None
+            if validation_csv_path and Path(validation_csv_path).exists():
+                logger.info(f"Loading accepted matches from {validation_csv_path}")
+                matches_df = pd.read_csv(validation_csv_path)
+                logger.info(f"Loaded {len(matches_df)} accepted matches")
+            else:
+                logger.info("No accepted matches file - will create report with empty incorporation columns")
+            
+            # Transform data: all filtered businesses with optional incorporation data
             transformed_data = []
             
-            for _, row in df.iterrows():
-                state = "Puerto Rico"
-                incorporation_link = self.create_incorporation_link(row.get('business_registration_index', ''))
+            for _, row in filtered_df.iterrows():
+                restaurant_name = row['Name']
                 
+                # Find matching incorporation record if exists
+                match_row = None
+                if matches_df is not None and not matches_df.empty:
+                    match = matches_df[matches_df['restaurant_name'] == restaurant_name]
+                    if not match.empty:
+                        match_row = match.iloc[0]
+                
+                state = "Puerto Rico"
+                
+                # Base restaurant data (always present)
                 transformed_row = {
-                    'Location Name': row['restaurant_name'],
-                    'Address': row.get('restaurant_address', '') if pd.notna(row.get('restaurant_address')) else '',
-                    'City': row.get('restaurant_city', '') if pd.notna(row.get('restaurant_city')) else '',
+                    'Location Name': restaurant_name,
+                    'Address': row.get('Full address', '') if pd.notna(row.get('Full address')) else '',
+                    'City': row.get('City', '') if pd.notna(row.get('City')) else '',
                     'State': state,
-                    'Website': row.get('restaurant_website', '') if pd.notna(row.get('restaurant_website')) else '',
-                    'Phone': row.get('restaurant_phone', '') if pd.notna(row.get('restaurant_phone')) else '',
-                    'Review Rating': row.get('restaurant_rating', 0) if pd.notna(row.get('restaurant_rating')) else 0,
-                    'Number of Reviews': row.get('restaurant_reviews_count', 0) if pd.notna(row.get('restaurant_reviews_count')) else 0,
-                    'Primary Business Type': row.get('restaurant_main_type', '') if pd.notna(row.get('restaurant_main_type')) else '',
-                    'Legal Name': row['business_legal_name'],
-                    'Incorporation Document Link': incorporation_link
+                    'Website': row.get('Website', '') if pd.notna(row.get('Website')) else '',
+                    'Phone': row.get('Phone', '') if pd.notna(row.get('Phone')) else '',
+                    'Review Rating': row.get('Reviews rating', 0) if pd.notna(row.get('Reviews rating')) else 0,
+                    'Number of Reviews': row.get('Reviews count', 0) if pd.notna(row.get('Reviews count')) else 0,
+                    'Primary Business Type': row.get('Main type', '') if pd.notna(row.get('Main type')) else '',
                 }
+                
+                # Incorporation data (empty if no match)
+                if match_row is not None:
+                    # Get values and convert None/NaN to empty string
+                    legal_name = match_row.get('business_legal_name', '')
+                    if pd.isna(legal_name):
+                        legal_name = ''
+                    
+                    reg_index = match_row.get('business_registration_index', '')
+                    incorporation_link = self.create_incorporation_link(reg_index)
+                    
+                    transformed_row['Legal Name'] = legal_name
+                    transformed_row['Incorporation Document Link'] = incorporation_link
+                else:
+                    transformed_row['Legal Name'] = ''
+                    transformed_row['Incorporation Document Link'] = ''
                 
                 transformed_data.append(transformed_row)
             
             # Create output DataFrame
             output_df = pd.DataFrame(transformed_data)
             
-            # Save to CSV
+            # Replace NaN with empty strings for cleaner output
+            output_df = output_df.fillna('')
+            
+            # Save to CSV (na_rep='' ensures NaN values are saved as empty strings)
             output_path = Path(output_csv_path)
             output_path.parent.mkdir(parents=True, exist_ok=True)
-            output_df.to_csv(output_path, index=False)
+            output_df.to_csv(output_path, index=False, na_rep='')
             logger.info(f"Saved {len(output_df)} transformed records to {output_path}")
+            
+            # Log summary statistics
+            matched_count = len([r for r in transformed_data if r['Legal Name']])
+            logger.info(f"Report contains {len(output_df)} total restaurants ({matched_count} with incorporation data)")
             
             # Print sample of transformed data
             logger.info("\nSample of transformed data:")
@@ -97,7 +138,8 @@ class ReportGenerator:
             return {
                 'success': True,
                 'output_file': str(output_path),
-                'record_count': len(output_df)
+                'record_count': len(output_df),
+                'matched_count': matched_count
             }
             
         except Exception as e:

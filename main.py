@@ -82,7 +82,6 @@ def main():
         logging.getLogger().setLevel(logging.DEBUG)
 
     config = MatchingConfig()
-    config.NAME_MATCH_THRESHOLD = args.threshold
     
     # Validate input file
     input_path = Path(args.input)

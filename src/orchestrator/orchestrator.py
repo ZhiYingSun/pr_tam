@@ -99,13 +99,13 @@ class PipelineOrchestrator:
         )
         
         # Apply business type filtering
-        working_csv = self._apply_business_filter(
+        filtered_csv = self._apply_business_filter(
                 input_csv, output_path, timestamp, exclusion_list, inclusion_list
         )
         
         # Load restaurants
         logger.info("Loading restaurants...")
-        restaurants = self.loader.load(working_csv, limit=limit)
+        restaurants = self.loader.load(filtered_csv, limit=limit)
         logger.info(f"Loaded {len(restaurants)} restaurants")
 
         async with self.searcher:
@@ -132,13 +132,10 @@ class PipelineOrchestrator:
         else:
             validation_file = None
         
-        # Transformation
-        if match_results:
-            final_output = self._run_transformation(
-                output_path, timestamp, validation_file
-            )
-        else:
-            final_output = None
+        # Transformation - always run to include all filtered businesses
+        final_output = self._run_transformation(
+            output_path, timestamp, validation_file, filtered_csv
+        )
         
         duration = self._log_pipeline_completion(start_time)
         
@@ -153,7 +150,7 @@ class PipelineOrchestrator:
             validation_results=validation_results,
             statistics=statistics,
             output_files=output_files,
-            matched_file=str(output_path / "matched_restaurants.csv") if match_results else None,
+            matched_file=output_files.matched_csv if match_results else None,
             validation_file=validation_file,
             final_output=final_output,
             duration=duration
@@ -370,7 +367,8 @@ class PipelineOrchestrator:
         self,
         output_path: Path,
         timestamp: str,
-        validation_file: Optional[str]
+        validation_file: Optional[str],
+        filtered_csv: str
     ) -> Optional[str]:
         """Run transformation pipeline."""
         if not self.report_generator:
@@ -379,7 +377,8 @@ class PipelineOrchestrator:
         final_output_path = output_path / f"final_output_{timestamp}.csv"
         transform_result = self.report_generator.run(
             output_csv_path=str(final_output_path),
-            validation_csv_path=validation_file
+            validation_csv_path=validation_file,
+            filtered_csv_path=filtered_csv
         )
         
         if transform_result.get('success'):

@@ -27,7 +27,7 @@ class ValidationResult(BaseModel):
     restaurant_name: str
     business_legal_name: str
     rapidfuzz_confidence_score: float
-    openai_match_score: Optional[float] = None  # Can be float from LLM
+    openai_match_score: Optional[float] = None
     openai_confidence: Optional[str] = None
     openai_recommendation: Optional[str] = None
     openai_reasoning: Optional[str] = None

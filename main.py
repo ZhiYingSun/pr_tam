@@ -134,7 +134,6 @@ def main():
             input_csv=str(input_path),
             output_dir=args.output,
             limit=args.limit,
-            apply_business_filter=True,
             exclusion_list=args.exclusion_list,
             inclusion_list=args.inclusion_list
         ))

@@ -91,7 +91,6 @@ class PipelineOrchestrator:
         input_csv: str,
         output_dir: str = "data/output",
         limit: Optional[int] = None,
-        apply_business_filter: bool = True,
         exclusion_list: Optional[str] = None,
         inclusion_list: Optional[str] = None
     ) -> PipelineResult:
@@ -102,7 +101,6 @@ class PipelineOrchestrator:
             input_csv: Path to input CSV file
             output_dir: Output directory for results
             limit: Optional limit on number of restaurants to process
-            apply_business_filter: Whether to apply business type filtering (default: True)
             exclusion_list: Path to exclusion list file
             inclusion_list: Path to inclusion list file
             
@@ -110,15 +108,13 @@ class PipelineOrchestrator:
             Dictionary with complete pipeline results
         """
         timestamp, output_path, start_time = self._initialize_pipeline_run(
-            input_csv, output_dir, limit, apply_business_filter
+            input_csv, output_dir, limit
         )
         
-        # Apply business type filtering by default
-        working_csv = input_csv
-        if apply_business_filter:
-            working_csv = self._apply_business_filter(
+        # Apply business type filtering
+        working_csv = self._apply_business_filter(
                 input_csv, output_path, timestamp, exclusion_list, inclusion_list
-            )
+        )
         
         # Load restaurants
         logger.info("Loading restaurants...")
@@ -238,8 +234,7 @@ class PipelineOrchestrator:
         self,
         input_csv: str,
         output_dir: str,
-        limit: Optional[int],
-        apply_business_filter: bool = False
+        limit: Optional[int]
     ) -> Tuple[str, Path, datetime]:
         """
         Initialize pipeline run: setup paths, timestamps, and log configuration.
@@ -248,8 +243,6 @@ class PipelineOrchestrator:
             input_csv: Path to input CSV file
             output_dir: Output directory for results
             limit: Optional limit on number of restaurants
-            apply_business_filter: Whether business type filtering will be applied
-            
         Returns:
             Tuple of (timestamp, output_path, start_time)
         """
@@ -266,7 +259,6 @@ class PipelineOrchestrator:
         logger.info(f"  Output: {output_dir}")
         if limit:
             logger.info(f"  Limit: {limit} restaurants")
-        logger.info(f"  Business type filtering: {'enabled' if apply_business_filter else 'disabled'}")
         logger.info(f"  Validation: enabled")
         logger.info(f"  Transformation: enabled")
         logger.info("=" * 80)

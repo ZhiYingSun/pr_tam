@@ -361,14 +361,14 @@ class PipelineOrchestrator:
         validation_path.mkdir(parents=True, exist_ok=True)
         
         validation_df = pd.DataFrame([r.__dict__ for r in validation_results])
-        validation_file_path = validation_path / f"validated_matches_{timestamp}.csv"
+        validation_file_path = validation_path / f"validation_results_all_{timestamp}.csv"
         validation_df.to_csv(validation_file_path, index=False)
         logger.info(f"Saved {len(validation_df)} validation results to {validation_file_path}")
         
         # Save medium and high confidence matches and return its path for final report generation
         validated_df = validation_df[validation_df['openai_confidence'].isin(['medium', 'high'])]
         if not validated_df.empty:
-            validated_path = validation_path / f"validated_matches_{timestamp}.csv"
+            validated_path = validation_path / f"validated_matches_accept_{timestamp}.csv"
             validated_df.to_csv(validated_path, index=False)
             logger.info(f"Saved {len(validated_df)} validated matches (medium/high confidence) to {validated_path}")
             return str(validated_path)

@@ -36,4 +36,15 @@ class ValidationResult(BaseModel):
     # Fields for multi-candidate validation
     selected_match_index: Optional[int] = None  # Index of selected match from candidates (0-based)
     total_candidates_evaluated: Optional[int] = None  # Total number of candidates evaluated
+    # Restaurant details for final output
+    restaurant_address: Optional[str] = None
+    restaurant_city: Optional[str] = None
+    restaurant_postal_code: Optional[str] = None
+    restaurant_website: Optional[str] = None
+    restaurant_phone: Optional[str] = None
+    restaurant_rating: Optional[float] = None
+    restaurant_reviews_count: Optional[int] = None
+    restaurant_main_type: Optional[str] = None
+    # Business details for final output
+    business_registration_index: Optional[str] = None
 

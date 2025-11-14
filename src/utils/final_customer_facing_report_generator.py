@@ -31,47 +31,36 @@ class FinalCustomerFacingReportGenerator:
         Run the transformation pipeline.
         
         Args:
-            input_csv_path: Path to the original matched restaurants CSV
+            input_csv_path: Not used (kept for backward compatibility)
             output_csv_path: Path to save the transformed data
-            validation_csv_path: Optional path to validation results CSV
+            validation_csv_path: Path to accepted matches CSV (required, contains all needed data)
             
         Returns:
             Dictionary with transformation results
         """
-        logger.info(f"Loading data from {input_csv_path}")
-        
         try:
-            # Load the original matched data
-            df = pd.read_csv(input_csv_path)
-            logger.info(f"Loaded {len(df)} matched restaurants")
-            
-            if df.empty:
-                logger.warning("No data to transform")
+            # Use accepted matches file as primary source
+            if not validation_csv_path or not Path(validation_csv_path).exists():
+                logger.warning("No accepted matches file provided - cannot generate final report")
                 return {
                     'success': False,
-                    'error': 'Empty input data',
+                    'error': 'Accepted matches file required',
                     'output_file': None
                 }
             
-            # If validation results are provided, merge them
-            if validation_csv_path and Path(validation_csv_path).exists():
-                logger.info(f"Loading validation results from {validation_csv_path}")
-                validation_df = pd.read_csv(validation_csv_path)
-                
-                # Merge validation results with original data
-                df = df.merge(
-                    validation_df[['restaurant_name', 'business_legal_name', 'openai_recommendation']],
-                    on=['restaurant_name', 'business_legal_name'],
-                    how='left'
-                )
-                
-                # Filter to only include accepted matches if validation data is available
-                if 'openai_recommendation' in df.columns:
-                    accepted_df = df[df['openai_recommendation'] == 'accept']
-                    logger.info(f"Filtered to {len(accepted_df)} accepted matches")
-                    df = accepted_df
+            logger.info(f"Loading accepted matches from {validation_csv_path}")
+            df = pd.read_csv(validation_csv_path)
+            logger.info(f"Loaded {len(df)} accepted matches")
             
-            # Transform data
+            if df.empty:
+                logger.warning("No accepted matches to transform")
+                return {
+                    'success': False,
+                    'error': 'No accepted matches',
+                    'output_file': None
+                }
+            
+            # Transform data directly from accepted matches CSV (no joins needed)
             transformed_data = []
             
             for _, row in df.iterrows():
@@ -80,14 +69,14 @@ class FinalCustomerFacingReportGenerator:
                 
                 transformed_row = {
                     'Location Name': row['restaurant_name'],
-                    'Address': row['restaurant_address'],
-                    'City': row['restaurant_city'],
+                    'Address': row.get('restaurant_address', '') if pd.notna(row.get('restaurant_address')) else '',
+                    'City': row.get('restaurant_city', '') if pd.notna(row.get('restaurant_city')) else '',
                     'State': state,
                     'Website': row.get('restaurant_website', '') if pd.notna(row.get('restaurant_website')) else '',
                     'Phone': row.get('restaurant_phone', '') if pd.notna(row.get('restaurant_phone')) else '',
-                    'Review Rating': row['restaurant_rating'],
-                    'Number of Reviews': row.get('restaurant_reviews_count', 0),
-                    'Primary Business Type': row.get('restaurant_main_type', ''),
+                    'Review Rating': row.get('restaurant_rating', 0) if pd.notna(row.get('restaurant_rating')) else 0,
+                    'Number of Reviews': row.get('restaurant_reviews_count', 0) if pd.notna(row.get('restaurant_reviews_count')) else 0,
+                    'Primary Business Type': row.get('restaurant_main_type', '') if pd.notna(row.get('restaurant_main_type')) else '',
                     'Legal Name': row['business_legal_name'],
                     'Incorporation Document Link': incorporation_link
                 }

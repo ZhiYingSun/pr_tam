@@ -263,7 +263,11 @@ class PipelineOrchestrator:
         output_path: Path,
         timestamp: str
     ) -> Optional[str]:
-        """Save validation results to CSV files with timestamp."""
+        """Save validation results to CSV files with timestamp.
+        
+        Returns the path to the accepted matches file if available,
+        otherwise returns the path to all matches file.
+        """
         import pandas as pd
         
         validation_path = output_path / "validation"
@@ -274,14 +278,17 @@ class PipelineOrchestrator:
         validation_df.to_csv(validation_file_path, index=False)
         logger.info(f"Saved {len(validation_df)} validation results to {validation_file_path}")
         
-        # Save accepted matches
+        # Save accepted matches and return its path for final report generation
         accepted_df = validation_df[validation_df['openai_recommendation'] == 'accept']
         if not accepted_df.empty:
             accepted_path = validation_path / f"validated_matches_accept_{timestamp}.csv"
             accepted_df.to_csv(accepted_path, index=False)
             logger.info(f"Saved {len(accepted_df)} accepted matches to {accepted_path}")
+            return str(accepted_path)
         
-        return str(validation_file_path)
+        # No accepted matches - return None (final report won't be generated)
+        logger.warning("No accepted matches found - final report will not be generated")
+        return None
     
     def _run_transformation(
         self,

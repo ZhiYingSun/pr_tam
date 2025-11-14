@@ -346,7 +346,16 @@ Respond in JSON:
                 openai_recommendation="reject",
                 openai_reasoning="No valid business records available for validation.",
                 final_status="reject",
-                total_candidates_evaluated=0
+                total_candidates_evaluated=0,
+                # Restaurant details
+                restaurant_address=restaurant.address,
+                restaurant_city=restaurant.city,
+                restaurant_postal_code=restaurant.postal_code,
+                restaurant_website=restaurant.website,
+                restaurant_phone=restaurant.phone,
+                restaurant_rating=restaurant.rating,
+                restaurant_reviews_count=restaurant.reviews_count,
+                restaurant_main_type=restaurant.main_type
             )
         
         # Construct simplified prompt with all candidates
@@ -359,7 +368,16 @@ Respond in JSON:
                 openai_recommendation="reject",
                 openai_reasoning="Failed to construct validation prompt.",
                 final_status="reject",
-                total_candidates_evaluated=len(valid_matches)
+                total_candidates_evaluated=len(valid_matches),
+                # Restaurant details
+                restaurant_address=restaurant.address,
+                restaurant_city=restaurant.city,
+                restaurant_postal_code=restaurant.postal_code,
+                restaurant_website=restaurant.website,
+                restaurant_phone=restaurant.phone,
+                restaurant_rating=restaurant.rating,
+                restaurant_reviews_count=restaurant.reviews_count,
+                restaurant_main_type=restaurant.main_type
             )
         
         # Call OpenAI API
@@ -377,7 +395,18 @@ Respond in JSON:
                 openai_reasoning="OpenAI validation failed. Using top confidence score match as fallback.",
                 final_status="manual_review",
                 selected_match_index=0,
-                total_candidates_evaluated=len(valid_matches)
+                total_candidates_evaluated=len(valid_matches),
+                # Restaurant details
+                restaurant_address=restaurant.address,
+                restaurant_city=restaurant.city,
+                restaurant_postal_code=restaurant.postal_code,
+                restaurant_website=restaurant.website,
+                restaurant_phone=restaurant.phone,
+                restaurant_rating=restaurant.rating,
+                restaurant_reviews_count=restaurant.reviews_count,
+                restaurant_main_type=restaurant.main_type,
+                # Business details
+                business_registration_index=top_match.business.registration_index if top_match.business else None
             )
         
         # Validate selected index
@@ -390,14 +419,23 @@ Respond in JSON:
                 restaurant_name=restaurant.name,
                 business_legal_name="",
                 rapidfuzz_confidence_score=0.0,
-                openai_match_score=int(openai_response.match_score) if openai_response.match_score is not None else None,
+                openai_match_score=openai_response.match_score if openai_response.match_score is not None else None,
                 openai_confidence=openai_response.confidence,
                 openai_recommendation=openai_response.recommendation,
                 openai_reasoning=openai_response.reasoning,
                 final_status=openai_response.recommendation,
                 selected_match_index=-1,
                 total_candidates_evaluated=len(valid_matches),
-                openai_raw_response=openai_response.model_dump_json()
+                openai_raw_response=openai_response.model_dump_json(),
+                # Restaurant details
+                restaurant_address=restaurant.address,
+                restaurant_city=restaurant.city,
+                restaurant_postal_code=restaurant.postal_code,
+                restaurant_website=restaurant.website,
+                restaurant_phone=restaurant.phone,
+                restaurant_rating=restaurant.rating,
+                restaurant_reviews_count=restaurant.reviews_count,
+                restaurant_main_type=restaurant.main_type
             )
         
         if selected_index < 0 or selected_index >= len(valid_matches):
@@ -410,19 +448,30 @@ Respond in JSON:
         # Get the selected match
         selected_match = valid_matches[selected_index]
         
-        # Create validation result
+        # Create validation result with all restaurant and business details
         validation_result = ValidationResult(
             restaurant_name=restaurant.name,
             business_legal_name=selected_match.business.legal_name if selected_match.business else "",
             rapidfuzz_confidence_score=selected_match.confidence_score,
-            openai_match_score=int(openai_response.match_score) if openai_response.match_score is not None else None,
+            openai_match_score=openai_response.match_score if openai_response.match_score is not None else None,
             openai_confidence=openai_response.confidence,
             openai_recommendation=openai_response.recommendation,
             openai_reasoning=openai_response.reasoning,
             final_status=openai_response.recommendation,
             selected_match_index=selected_index,
             total_candidates_evaluated=len(valid_matches),
-            openai_raw_response=openai_response.model_dump_json()
+            openai_raw_response=openai_response.model_dump_json(),
+            # Restaurant details
+            restaurant_address=restaurant.address,
+            restaurant_city=restaurant.city,
+            restaurant_postal_code=restaurant.postal_code,
+            restaurant_website=restaurant.website,
+            restaurant_phone=restaurant.phone,
+            restaurant_rating=restaurant.rating,
+            restaurant_reviews_count=restaurant.reviews_count,
+            restaurant_main_type=restaurant.main_type,
+            # Business details
+            business_registration_index=selected_match.business.registration_index if selected_match.business else None
         )
         
         logger.info(

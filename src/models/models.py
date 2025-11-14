@@ -95,17 +95,17 @@ class MatchingConfig:
     """Configuration constants for the matching algorithm"""
     
     # Matching thresholds
-    NAME_MATCH_THRESHOLD = 70
-    HIGH_CONFIDENCE_THRESHOLD = 85
-    MEDIUM_CONFIDENCE_THRESHOLD = 75
-    LOW_CONFIDENCE_THRESHOLD = 70
+    NAME_MATCH_THRESHOLD = 50
+    HIGH_CONFIDENCE_THRESHOLD = 70
+    MEDIUM_CONFIDENCE_THRESHOLD = 50
+    LOW_CONFIDENCE_THRESHOLD = 30
     
     # Score bonuses
     POSTAL_CODE_BONUS = 30
     CITY_MATCH_BONUS = 20
     
     # Search parameters
-    MAX_CANDIDATES = 50  # Increased to support returning top 25 matches for LLM evaluation
+    SEARCH_LIMIT = 250
     REQUEST_DELAY = 0.5  # seconds between API calls
     MAX_RETRIES = 3
     BACKOFF_FACTOR = 2

@@ -1,6 +1,6 @@
 # TAM PR
 
-A high-performance Python application that matches restaurant data with Puerto Rico incorporation documents.
+An application that matches restaurant data with Puerto Rico incorporation documents.
 
 ## Quick Start
 

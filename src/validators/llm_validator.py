@@ -10,8 +10,7 @@ from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_excep
 
 from src.models.models import MatchResult, MatchingConfig, RestaurantRecord
 from src.models.validation_models import (
-    OpenAIValidationResponse, 
-    OpenAIMultiCandidateResponse,
+    OpenAIValidationResponse,
     ValidationResult
 )
 from src.clients.openai_client import OpenAIClient
@@ -173,98 +172,12 @@ Example JSON Output:
         return validation_result
 
 
-    def _construct_multi_candidate_prompt(self, restaurant: RestaurantRecord, matches: List[MatchResult]) -> str:
-        """
-        Constructs a simple prompt for OpenAI to evaluate 25 candidate matches and select the best one.
-        
-        Args:
-            restaurant: RestaurantRecord to match
-            matches: List of MatchResult candidates (up to 25, sorted by confidence score, already filtered to have business records)
-            
-        Returns:
-            Formatted prompt string
-        """
-        # Build simplified candidate list - just key info
-        candidates_text = []
-        for idx, match in enumerate(matches):
-            business = match.business
-            candidates_text.append(
-                f"#{idx + 1}. {business.legal_name} | "
-                f"Address: {business.business_address or 'N/A'} | "
-                f"Score: {match.confidence_score:.1f}% | "
-                f"Postal: {'Yes' if match.postal_code_match else 'No'} | "
-                f"City: {'Yes' if match.city_match else 'No'}"
-            )
-
-        # TODO: tune this
-        prompt = f"""You are evaluating 25 business candidates to find the best match for a restaurant.
-
-Restaurant: {restaurant.name}
-Location: {restaurant.address}, {restaurant.city} {restaurant.postal_code}
-Type: {restaurant.main_type}
-
-Candidates (sorted by initial score):
-{chr(10).join(candidates_text)}
-
-Task: Select the ONE candidate that best matches the restaurant, or indicate none match.
-
-Consider: name similarity (accounting for LLC/Inc suffixes), address proximity, and business type compatibility.
-
-Respond in JSON:
-{{
-    "selected_candidate_index": <0-24 or -1 if none>,
-    "match_score": <0-100>,
-    "confidence": "high|medium|low",
-    "recommendation": "accept|reject|manual_review",
-    "reasoning": "<brief explanation of why this candidate was selected>"
-}}"""
-        return prompt
-
-    @retry(
-        stop=stop_after_attempt(MatchingConfig.MAX_RETRIES),
-        wait=wait_exponential(multiplier=1, min=4, max=10),
-        retry=retry_if_exception_type(APIStatusError)
-    )
-    async def _make_multi_candidate_llm_call(self, prompt: str) -> Optional[OpenAIMultiCandidateResponse]:
-        """
-        Makes an asynchronous call to the OpenAI API for multi-candidate validation.
-        
-        Returns:
-            OpenAIMultiCandidateResponse if successful, None on error
-        """
-        try:
-            response_dict = await self.openai_client.chat_completion(
-                model=self.model,
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant designed to output JSON."},
-                    {"role": "user", "content": prompt}
-                ],
-                temperature=self.temperature,
-                response_format={"type": "json_object"}
-            )
-            
-            if not response_dict:
-                return None
-            
-            try:
-                return OpenAIMultiCandidateResponse(**response_dict)
-            except ValidationError as e:
-                logger.error(f"Failed to validate OpenAI multi-candidate response structure: {e}. Response: {response_dict}")
-                return None
-            
-        except APIStatusError as e:
-            logger.error(f"OpenAI API error (status {e.status_code}): {e.response}")
-            raise  # Re-raise to trigger retry
-        except Exception as e:
-            logger.error(f"An unexpected error occurred during OpenAI API call: {e}")
-            return None
-
     async def validate_best_match_from_candidates(
         self, 
         matches: List[MatchResult]
     ) -> Tuple[Optional[MatchResult], ValidationResult]:
         """
-        Validates multiple candidate matches (up to 25) and selects the best one using OpenAI.
+        Validates multiple candidate matches (up to 25) individually and selects the best one.
         
         Args:
             matches: List of MatchResult candidates (up to 25, sorted by confidence score)
@@ -311,53 +224,78 @@ Respond in JSON:
                 restaurant_main_type=restaurant.main_type
             )
 
-        prompt = self._construct_multi_candidate_prompt(restaurant, valid_matches)
-        llm_response = await self._make_multi_candidate_llm_call(prompt)
+        # Validate each candidate individually
+        logger.info(f"Validating {len(valid_matches)} candidates for '{restaurant.name}'")
+        validation_tasks = [self.validate_match(match) for match in valid_matches]
+        validation_results = await asyncio.gather(*validation_tasks, return_exceptions=True)
         
-        if not llm_response:
-            logger.error(f"OpenAI validation failed for '{restaurant.name}'")
-            # Return the top match by confidence score as fallback
-            top_match = valid_matches[0]
-            return top_match, ValidationResult(
-                restaurant_name=restaurant.name,
-                business_legal_name=top_match.business.legal_name if top_match.business else "",
-                rapidfuzz_confidence_score=top_match.confidence_score,
-                openai_recommendation="manual_review",
-                openai_reasoning="OpenAI validation failed. Using top confidence score match as fallback.",
-                final_status="manual_review",
-                selected_match_index=0,
-                total_candidates_evaluated=len(valid_matches),
-                # Restaurant details
-                restaurant_address=restaurant.address,
-                restaurant_city=restaurant.city,
-                restaurant_postal_code=restaurant.postal_code,
-                restaurant_website=restaurant.website,
-                restaurant_phone=restaurant.phone,
-                restaurant_rating=restaurant.rating,
-                restaurant_reviews_count=restaurant.reviews_count,
-                restaurant_main_type=restaurant.main_type,
-                # Business details
-                business_registration_index=top_match.business.registration_index if top_match.business else None
-            )
+        # Process results and handle exceptions
+        candidate_validations: List[Tuple[MatchResult, ValidationResult]] = []
+        for i, result in enumerate(validation_results):
+            if isinstance(result, Exception):
+                logger.error(f"Error validating candidate {i+1} for '{restaurant.name}': {result}")
+                # Create a fallback validation result for errors
+                match = valid_matches[i]
+                error_validation = ValidationResult(
+                    restaurant_name=restaurant.name,
+                    business_legal_name=match.business.legal_name if match.business else "",
+                    rapidfuzz_confidence_score=match.confidence_score,
+                    openai_recommendation="manual_review",
+                    openai_reasoning=f"Error during validation: {result}",
+                    final_status="manual_review",
+                    # Restaurant details
+                    restaurant_address=restaurant.address,
+                    restaurant_city=restaurant.city,
+                    restaurant_postal_code=restaurant.postal_code,
+                    restaurant_website=restaurant.website,
+                    restaurant_phone=restaurant.phone,
+                    restaurant_rating=restaurant.rating,
+                    restaurant_reviews_count=restaurant.reviews_count,
+                    restaurant_main_type=restaurant.main_type,
+                    # Business details
+                    business_registration_index=match.business.registration_index if match.business else None
+                )
+                candidate_validations.append((match, error_validation))
+            else:
+                # Add restaurant and business details to validation result
+                match = valid_matches[i]
+                result.restaurant_address = restaurant.address
+                result.restaurant_city = restaurant.city
+                result.restaurant_postal_code = restaurant.postal_code
+                result.restaurant_website = restaurant.website
+                result.restaurant_phone = restaurant.phone
+                result.restaurant_rating = restaurant.rating
+                result.restaurant_reviews_count = restaurant.reviews_count
+                result.restaurant_main_type = restaurant.main_type
+                result.business_registration_index = match.business.registration_index if match.business else None
+                result.total_candidates_evaluated = len(valid_matches)
+                result.selected_match_index = i
+                candidate_validations.append((match, result))
         
-        # Validate selected index
-        selected_index = llm_response.selected_candidate_index
+        # Select the best match based on validation results
+        # Priority: 1) accept recommendations, 2) highest match_score, 3) highest confidence_score
+        def score_validation(match_result_pair: Tuple[MatchResult, ValidationResult]) -> Tuple[int, float, float]:
+            match, validation = match_result_pair
+            # Priority order: accept > manual_review > reject
+            priority_map = {"accept": 3, "manual_review": 2, "reject": 1}
+            priority = priority_map.get(validation.openai_recommendation or "reject", 1)
+            # Use match_score if available, otherwise fall back to rapidfuzz score
+            score = validation.openai_match_score if validation.openai_match_score is not None else validation.rapidfuzz_confidence_score
+            return (priority, score, validation.rapidfuzz_confidence_score)
         
-        if selected_index == -1:
-            # LLM determined none of the candidates match
-            logger.info(f"LLM determined no good match for '{restaurant.name}' among {len(valid_matches)} candidates")
+        # Sort by priority, then by score (descending)
+        candidate_validations.sort(key=score_validation, reverse=True)
+        
+        if not candidate_validations:
+            logger.warning(f"No validations completed for '{restaurant.name}'")
             return None, ValidationResult(
                 restaurant_name=restaurant.name,
                 business_legal_name="",
                 rapidfuzz_confidence_score=0.0,
-                openai_match_score=llm_response.match_score if llm_response.match_score is not None else None,
-                openai_confidence=llm_response.confidence,
-                openai_recommendation=llm_response.recommendation,
-                openai_reasoning=llm_response.reasoning,
-                final_status=llm_response.recommendation,
-                selected_match_index=-1,
+                openai_recommendation="reject",
+                openai_reasoning="No validations completed.",
+                final_status="reject",
                 total_candidates_evaluated=len(valid_matches),
-                openai_raw_response=llm_response.model_dump_json(),
                 # Restaurant details
                 restaurant_address=restaurant.address,
                 restaurant_city=restaurant.city,
@@ -369,48 +307,15 @@ Respond in JSON:
                 restaurant_main_type=restaurant.main_type
             )
         
-        if selected_index < 0 or selected_index >= len(valid_matches):
-            logger.warning(
-                f"Invalid selected_index {selected_index} for '{restaurant.name}'. "
-                f"Using top match (index 0) as fallback."
-            )
-            selected_index = 0
-        
-        # Get the selected match
-        selected_match = valid_matches[selected_index]
-
-        # Create validation result with all restaurant and business details
-        validation_result = ValidationResult(
-            restaurant_name=restaurant.name,
-            business_legal_name=selected_match.business.legal_name if selected_match.business else "",
-            rapidfuzz_confidence_score=selected_match.confidence_score,
-            openai_match_score=llm_response.match_score if llm_response.match_score is not None else None,
-            openai_confidence=llm_response.confidence,
-            openai_recommendation=llm_response.recommendation,
-            openai_reasoning=llm_response.reasoning,
-            final_status=llm_response.recommendation,
-            selected_match_index=selected_index,
-            total_candidates_evaluated=len(valid_matches),
-            openai_raw_response=llm_response.model_dump_json(),
-            # Restaurant details
-            restaurant_address=restaurant.address,
-            restaurant_city=restaurant.city,
-            restaurant_postal_code=restaurant.postal_code,
-            restaurant_website=restaurant.website,
-            restaurant_phone=restaurant.phone,
-            restaurant_rating=restaurant.rating,
-            restaurant_reviews_count=restaurant.reviews_count,
-            restaurant_main_type=restaurant.main_type,
-            # Business details
-            business_registration_index=selected_match.business.registration_index if selected_match.business else None
-        )
+        # Get the best match
+        best_match, best_validation = candidate_validations[0]
         
         logger.info(
-            f"LLM selected candidate #{selected_index + 1} for '{restaurant.name}': "
-            f"'{selected_match.business.legal_name if selected_match.business else 'N/A'}' "
-            f"(recommendation: {llm_response.recommendation}, "
-            f"score: {llm_response.match_score}%)"
+            f"Selected best candidate for '{restaurant.name}': "
+            f"'{best_match.business.legal_name if best_match.business else 'N/A'}' "
+            f"(recommendation: {best_validation.openai_recommendation}, "
+            f"score: {best_validation.openai_match_score or best_validation.rapidfuzz_confidence_score:.1f}%)"
         )
         
-        return selected_match, validation_result
+        return best_match, best_validation
 

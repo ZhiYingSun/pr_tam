@@ -72,26 +72,24 @@ class PipelineOrchestrator:
             logger.error(f"Error matching restaurant '{restaurant.name}': {e}", exc_info=True)
             return [], None
 
-        # Step 2: Find best match from 25 candidates
+        # Step 2: Validate all candidates and select the best one
         validation_result = None
-        selected_match = None
         
         if match_results:
             try:
                 selected_match, validation_result = await self.validator.validate_best_match_from_candidates(match_results)
+                # Return only the selected match in the list, along with its validation result
+                if selected_match:
+                    return [selected_match], validation_result
+                else:
+                    # No match selected, return empty list
+                    return [], validation_result
             except Exception as e:
                 logger.error(f"Error validating matches for '{restaurant.name}': {e}", exc_info=True)
                 # Return all matches even if validation failed
-                return match_results[0], None
+                return match_results, None
 
-        # Step 3: Validate the selected match
-        if selected_match:
-            try:
-                validation_result = await self.validator.validate_match(selected_match)
-            except Exception as e:
-                logger.error(f"Error validating match for '{restaurant.name}': {e}", exc_info=True)
-
-        return selected_match, validation_result
+        return match_results, validation_result
     
     async def run(
         self,

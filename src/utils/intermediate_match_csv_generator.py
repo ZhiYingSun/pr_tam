@@ -248,7 +248,7 @@ def generate_summary_report(matches: List[MatchResult], output_path: str) -> Non
 
 def generate_all_outputs(matches: List[MatchResult], output_dir: str = "data/output") -> GeneratedOutputFiles:
     """
-    Generate all output files (matched CSV, unmatched CSV, summary report).
+    Generate all output files (matched CSV, unmatched CSV).
     
     Args:
         matches: List of MatchResult objects
@@ -268,17 +268,15 @@ def generate_all_outputs(matches: List[MatchResult], output_dir: str = "data/out
     # File paths
     matched_csv = output_path / f"matched_restaurants_{timestamp}.csv"
     unmatched_csv = output_path / f"unmatched_restaurants_{timestamp}.csv"
-    summary_report = output_path / f"summary_report_{timestamp}.txt"
     
     # Generate files
     generate_matched_restaurants_csv(matches, str(matched_csv))
     generate_unmatched_restaurants_csv(matches, str(unmatched_csv))
-    generate_summary_report(matches, str(summary_report))
     
     generated_files = GeneratedOutputFiles(
         matched_csv=str(matched_csv),
         unmatched_csv=str(unmatched_csv),
-        summary_report=str(summary_report)
+        summary_report=""  # Summary report generation removed
     )
     
     logger.info(f"Generated all output files in {output_dir}")

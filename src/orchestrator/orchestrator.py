@@ -132,7 +132,7 @@ class PipelineOrchestrator:
 
         # Save validation results if available
         if validation_results:
-            validation_file = self._save_validation_results(validation_results, output_path)
+            validation_file = self._save_validation_results(validation_results, output_path, timestamp)
         else:
             validation_file = None
         
@@ -260,22 +260,24 @@ class PipelineOrchestrator:
     def _save_validation_results(
         self,
         validation_results: List[ValidationResult],
-        output_path: Path
+        output_path: Path,
+        timestamp: str
     ) -> Optional[str]:
-        """Save validation results to CSV files."""
+        """Save validation results to CSV files with timestamp."""
         import pandas as pd
         
         validation_path = output_path / "validation"
         validation_path.mkdir(parents=True, exist_ok=True)
         
         validation_df = pd.DataFrame([r.__dict__ for r in validation_results])
-        validation_file_path = validation_path / "validated_matches_all.csv"
+        validation_file_path = validation_path / f"validated_matches_all_{timestamp}.csv"
         validation_df.to_csv(validation_file_path, index=False)
+        logger.info(f"Saved {len(validation_df)} validation results to {validation_file_path}")
         
         # Save accepted matches
         accepted_df = validation_df[validation_df['openai_recommendation'] == 'accept']
         if not accepted_df.empty:
-            accepted_path = validation_path / "validated_matches_accept.csv"
+            accepted_path = validation_path / f"validated_matches_accept_{timestamp}.csv"
             accepted_df.to_csv(accepted_path, index=False)
             logger.info(f"Saved {len(accepted_df)} accepted matches to {accepted_path}")
         

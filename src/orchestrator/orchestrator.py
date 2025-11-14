@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 
 from src.utils.loader import RestaurantLoader, CSVRestaurantLoader
 from src.utils.intermediate_match_csv_generator import generate_all_outputs, print_match_statistics
-from src.utils.business_type_filter import BusinessTypeFilter
+from src.utils.business_filter import BusinessFilter
 from src.models.models import MatchingConfig, RestaurantRecord, MatchResult, PipelineResult
 from src.models.validation_models import ValidationResult
 from src.matchers.matcher import RestaurantMatcher
@@ -311,7 +311,7 @@ class PipelineOrchestrator:
         
         try:
             # Create filter with both exclusion and inclusion lists
-            filter_obj = BusinessTypeFilter(
+            filter_obj = BusinessFilter(
                 exclusion_list_file=exclusion_list,
                 inclusion_list_file=inclusion_list
             )

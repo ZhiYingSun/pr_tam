@@ -1,4 +1,4 @@
 """Utility functions for data processing"""
-from .business_type_filter import BusinessTypeFilter, BusinessTypeListLoader, FilterResult
+from .business_filter import BusinessFilter, BusinessTypeListLoader, FilterResult
 
-__all__ = ['BusinessTypeFilter', 'BusinessTypeListLoader', 'FilterResult']
+__all__ = ['BusinessFilter', 'BusinessTypeListLoader', 'FilterResult']

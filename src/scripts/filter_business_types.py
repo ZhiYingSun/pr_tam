@@ -16,7 +16,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.utils.business_type_filter import BusinessTypeFilter
+from src.utils.business_filter import BusinessFilter
 
 logging.basicConfig(
     level=logging.INFO,
@@ -72,7 +72,7 @@ def main():
     
     try:
         # Create filter with both exclusion and inclusion lists
-        filter_obj = BusinessTypeFilter(
+        filter_obj = BusinessFilter(
             exclusion_list_file=exclusion_list,
             inclusion_list_file=inclusion_list
         )

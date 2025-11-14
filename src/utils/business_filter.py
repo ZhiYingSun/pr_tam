@@ -56,7 +56,7 @@ class BusinessTypeListLoader:
         return types
 
 
-class BusinessTypeFilter:
+class BusinessFilter:
     """
     Filters businesses based on combined inclusion/exclusion logic.
     
@@ -66,14 +66,14 @@ class BusinessTypeFilter:
     
     Usage:
         # Using both exclusion and inclusion lists
-        filter_obj = BusinessTypeFilter(
+        filter_obj = BusinessFilter(
             exclusion_list_file="src/misc/excluded_business_types.txt",
             inclusion_list_file="src/misc/included_business_types.txt"
         )
         result = filter_obj.filter(df)
         
         # Injecting lists directly (for testing)
-        filter_obj = BusinessTypeFilter(
+        filter_obj = BusinessFilter(
             excluded_types={"Bar", "Club"},
             included_types={"Restaurant", "Cafe"}
         )
@@ -123,7 +123,7 @@ class BusinessTypeFilter:
             raise ValueError("Must provide inclusion_list_file or included_types")
         
         logger.info(
-            f"Initialized BusinessTypeFilter with combined exclusion/inclusion logic: "
+            f"Initialized BusinessFilter with combined exclusion/inclusion logic: "
             f"{len(self.excluded_types)} excluded types, {len(self.included_types)} included types"
         )
     

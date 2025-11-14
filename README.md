@@ -53,8 +53,6 @@ export OPENAI_API_KEY=your_key_here
 
 ## Business Filtering
 
-The pipeline **always applies business filtering** to ensure high-quality, DoorDash-compatible data:
-
 **Filtering Steps:**
 1. **Remove closed businesses** - Filters out any business where `Is closed = "Yes"`
 2. **Remove unsupported business types** - Removes bars, clubs, gyms, etc. and keeps only food-related businesses

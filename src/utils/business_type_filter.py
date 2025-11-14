@@ -193,9 +193,11 @@ class BusinessTypeFilter:
     
     def filter(self, df: pd.DataFrame) -> FilterResult:
         """
-        Filter DataFrame based on combined exclusion/inclusion logic.
+        Filter DataFrame based on combined exclusion/inclusion logic and closed status.
         
-        Logic: Remove if (matches exclusion type) AND (does NOT match any inclusion type).
+        Logic: 
+        1. Remove closed businesses (Is closed == "Yes")
+        2. Remove if (matches exclusion type) AND (does NOT match any inclusion type)
         
         Args:
             df: Input DataFrame with business records
@@ -204,7 +206,7 @@ class BusinessTypeFilter:
             FilterResult containing filtered DataFrame, removed records, and statistics
         """
         original_count = len(df)
-        logger.info(f"Filtering {original_count:,} businesses by business type")
+        logger.info(f"Filtering {original_count:,} businesses")
         
         # Check if required columns exist
         if self.main_type_column not in df.columns:
@@ -222,16 +224,27 @@ class BusinessTypeFilter:
         df_copy = df.copy()
         df_copy['_removal_reason'] = None
         
-        # Filter based on combined exclusion/inclusion logic
+        # Step 1: Filter out closed businesses
+        if 'Is closed' in df_copy.columns:
+            closed_mask = df_copy['Is closed'] == 'Yes'
+            df_copy.loc[closed_mask, '_removal_reason'] = 'Business is closed'
+            closed_count = closed_mask.sum()
+            if closed_count > 0:
+                logger.info(f"Removing {closed_count:,} closed businesses")
+        
+        # Step 2: Filter based on combined exclusion/inclusion logic
         mask = df_copy.apply(self._should_include, axis=1)
         
-        # Mark removed records
+        # Mark removed records (only if not already marked as closed)
         removed_mask = ~mask
-        df_copy.loc[removed_mask, '_removal_reason'] = 'Matches exclusion type but no inclusion type'
+        already_marked = df_copy['_removal_reason'].notna()
+        df_copy.loc[removed_mask & ~already_marked, '_removal_reason'] = 'Matches exclusion type but no inclusion type'
         
-        # Separate filtered and removed
-        filtered_df = df_copy[mask].copy()
-        removed_df = df_copy[removed_mask].copy()
+        # Separate filtered and removed - include both closed and type-filtered businesses
+        # Businesses are removed if they have a removal reason (closed or wrong type)
+        has_removal_reason = df_copy['_removal_reason'].notna()
+        filtered_df = df_copy[~has_removal_reason].copy()
+        removed_df = df_copy[has_removal_reason].copy()
         
         # Remove internal column
         filtered_df = filtered_df.drop(columns=['_removal_reason'], errors='ignore')
@@ -241,16 +254,23 @@ class BusinessTypeFilter:
         filtered_count = len(filtered_df)
         removed_count = len(removed_df)
         
-        # Count removals by main business type
+        # Count removals by reason
         removal_reasons = {}
         if len(removed_df) > 0:
-            type_counts = removed_df[self.main_type_column].value_counts()
-            removal_reasons['Matches exclusion type but no inclusion type'] = removed_count
-            logger.info(f"Removed {removed_count:,} businesses by type:")
-            for biz_type, count in type_counts.head(10).items():
-                logger.info(f"  {biz_type}: {count:,}")
-            if len(type_counts) > 10:
-                logger.info(f"  ... and {len(type_counts) - 10} more types")
+            reason_counts = removed_df['Removal reason'].value_counts()
+            for reason, count in reason_counts.items():
+                removal_reasons[reason] = int(count)
+                logger.info(f"Removed {count:,} businesses: {reason}")
+            
+            # Also show breakdown by business type for type-based removals
+            type_removed = removed_df[removed_df['Removal reason'] == 'Matches exclusion type but no inclusion type']
+            if len(type_removed) > 0:
+                type_counts = type_removed[self.main_type_column].value_counts()
+                logger.info(f"  Breakdown by type:")
+                for biz_type, count in type_counts.head(10).items():
+                    logger.info(f"    {biz_type}: {count:,}")
+                if len(type_counts) > 10:
+                    logger.info(f"    ... and {len(type_counts) - 10} more types")
         
         logger.info(
             f"Filtered {original_count:,} -> {filtered_count:,} businesses "

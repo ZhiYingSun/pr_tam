@@ -287,7 +287,7 @@ class PipelineOrchestrator:
             Path to filtered CSV file
         """
         logger.info("=" * 80)
-        logger.info("APPLYING BUSINESS TYPE FILTERING")
+        logger.info("APPLYING BUSINESS FILTERING")
         logger.info("=" * 80)
         
         if not exclusion_list or not inclusion_list:
@@ -304,7 +304,9 @@ class PipelineOrchestrator:
         
         logger.info(f"Exclusion list: {exclusion_list}")
         logger.info(f"Inclusion list: {inclusion_list}")
-        logger.info("Logic: Remove if matches exclusion type AND does NOT match any inclusion type")
+        logger.info("Filtering logic:")
+        logger.info("  1. Remove closed businesses (Is closed = Yes)")
+        logger.info("  2. Remove if matches exclusion type AND does NOT match any inclusion type")
         logger.info("-" * 80)
         
         try:

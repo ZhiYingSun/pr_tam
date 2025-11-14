@@ -11,7 +11,7 @@ from typing import Optional, Dict
 logger = logging.getLogger(__name__)
 
 
-class FinalCustomerFacingReportGenerator:
+class ReportGenerator:
     """Generator for final customer-facing reports from matched restaurant data."""
     
     @staticmethod

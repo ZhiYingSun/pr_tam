@@ -11,7 +11,7 @@ from src.models.validation_models import ValidationResult
 from src.matchers.matcher import RestaurantMatcher
 from src.searchers.searcher import IncorporationSearcher
 from src.validators.llm_validator import LLMValidator
-from src.utils.report_generator import FinalCustomerFacingReportGenerator
+from src.utils.report_generator import ReportGenerator
 from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class PipelineOrchestrator:
         searcher: IncorporationSearcher,
         config: MatchingConfig,
         loader: RestaurantLoader,
-        report_generator: FinalCustomerFacingReportGenerator
+        report_generator: ReportGenerator
     ):
         """
         Initialize the pipeline orchestrator.
@@ -35,7 +35,7 @@ class PipelineOrchestrator:
             searcher: IncorporationSearcher instance
             config: Matching configuration
             loader: RestaurantLoader instance
-            transformation_pipeline: FinalCustomerFacingReportGenerator instance
+            transformation_pipeline: ReportGenerator instance
         """
         self.config = config
         self.searcher = searcher

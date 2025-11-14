@@ -66,7 +66,7 @@ class PipelineOrchestrator:
         - MatchResult: Selected best match from candidates, or None if no match found
         - ValidationResult: LLM validation result with selected best match, or None if validation failed
         """
-        # Step 1: Find top 25 candidate matches
+        # Step 1: Find top 3 candidate matches
         match_results = []
         try:
             match_results = await matcher.find_best_match(restaurant)

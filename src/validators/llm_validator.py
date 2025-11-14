@@ -304,6 +304,7 @@ Return ONLY valid JSON (no markdown fences, no preamble):
                 final_status="reject",
                 total_candidates_evaluated=0,
                 # Restaurant details
+                restaurant_google_id=restaurant.google_id,
                 restaurant_address=restaurant.address,
                 restaurant_city=restaurant.city,
                 restaurant_postal_code=restaurant.postal_code,
@@ -334,6 +335,7 @@ Return ONLY valid JSON (no markdown fences, no preamble):
                     openai_reasoning=f"Error during validation: {result}",
                     final_status="manual_review",
                     # Restaurant details
+                    restaurant_google_id=restaurant.google_id,
                     restaurant_address=restaurant.address,
                     restaurant_city=restaurant.city,
                     restaurant_postal_code=restaurant.postal_code,
@@ -349,6 +351,7 @@ Return ONLY valid JSON (no markdown fences, no preamble):
             else:
                 # Add restaurant and business details to validation result
                 match = valid_matches[i]
+                result.restaurant_google_id = restaurant.google_id
                 result.restaurant_address = restaurant.address
                 result.restaurant_city = restaurant.city
                 result.restaurant_postal_code = restaurant.postal_code
@@ -387,6 +390,7 @@ Return ONLY valid JSON (no markdown fences, no preamble):
                 final_status="reject",
                 total_candidates_evaluated=len(valid_matches),
                 # Restaurant details
+                restaurant_google_id=restaurant.google_id,
                 restaurant_address=restaurant.address,
                 restaurant_city=restaurant.city,
                 restaurant_postal_code=restaurant.postal_code,

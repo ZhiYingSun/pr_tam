@@ -57,8 +57,8 @@ def main():
     parser.add_argument(
         '--limit', '-l',
         type=int,
-        default=50,
-        help='Number of restaurants to process'
+        default=None,
+        help='Number of restaurants to process (default: all)'
     )
     parser.add_argument(
         '--exclusion-list',

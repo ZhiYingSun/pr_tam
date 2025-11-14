@@ -37,6 +37,7 @@ class ValidationResult(BaseModel):
     selected_match_index: Optional[int] = None  # Index of selected match from candidates (0-based)
     total_candidates_evaluated: Optional[int] = None  # Total number of candidates evaluated
     # Restaurant details for final output
+    restaurant_google_id: Optional[str] = None
     restaurant_address: Optional[str] = None
     restaurant_city: Optional[str] = None
     restaurant_postal_code: Optional[str] = None

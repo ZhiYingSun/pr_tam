@@ -74,11 +74,16 @@ class ReportGenerator:
             
             for _, row in filtered_df.iterrows():
                 restaurant_name = row['Name']
+                restaurant_google_id = row.get('Google ID', '')
                 
                 # Find matching incorporation record if exists
+                # Match by Google ID first (unique identifier), fall back to name if no Google ID
                 match_row = None
                 if matches_df is not None and not matches_df.empty:
-                    match = matches_df[matches_df['restaurant_name'] == restaurant_name]
+                    if restaurant_google_id and pd.notna(restaurant_google_id):
+                        match = matches_df[matches_df['restaurant_google_id'] == restaurant_google_id]
+                    else:
+                        match = matches_df[matches_df['restaurant_name'] == restaurant_name]
                     if not match.empty:
                         match_row = match.iloc[0]
                 

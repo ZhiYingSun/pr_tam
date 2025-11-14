@@ -47,7 +47,7 @@ def main():
     
     parser.add_argument(
         '--input', '-i',
-        default='data/processed/doordash_filtered_restaurants.csv',
+        default='data/Puerto Rico Data_ v1109_155.csv',
         help='Input CSV file path'
     )
     parser.add_argument(
@@ -66,6 +66,16 @@ def main():
         type=float,
         default=70.0,
         help='Name match threshold percentage'
+    )
+    parser.add_argument(
+        '--exclusion-list',
+        default='src/misc/excluded_business_types.txt',
+        help='Path to exclusion list for business type filtering'
+    )
+    parser.add_argument(
+        '--inclusion-list',
+        default='src/misc/included_business_types.txt',
+        help='Path to inclusion list for business type filtering'
     )
     parser.add_argument(
         '--verbose', '-v',
@@ -123,7 +133,9 @@ def main():
         result = asyncio.run(orchestrator.run(
             input_csv=str(input_path),
             output_dir=args.output,
-            limit=args.limit
+            limit=args.limit,
+            exclusion_list=args.exclusion_list,
+            inclusion_list=args.inclusion_list
         ))
         if result.success:
             _log_processing_result(result)

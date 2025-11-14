@@ -185,7 +185,7 @@ Cleaned name:"""
     async def find_best_match(self, restaurant: RestaurantRecord) -> List[MatchResult]:
         """
         Searches for the top 25 matching business records for a given restaurant.
-        Uses OpenAI to clean the name before searching if available.
+        Uses OpenAI to clean the name before searching
         """
         search_query = await self._clean_name_with_openai(restaurant.name)
         candidates = await self.incorporation_searcher.search_business(

@@ -41,7 +41,7 @@ class IncorporationSearcher:
         """Async context manager exit - close ZyteClient session."""
         await self.zyte_client.close()
     
-    async def search_business(self, business_name: str, limit: int = 5) -> List[BusinessRecord]:
+    async def search_business(self, business_name: str, limit: int = 250) -> List[BusinessRecord]:
         """Search for business by name using reverse engineered PR incorporation API."""
         
         payload = {

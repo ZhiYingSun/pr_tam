@@ -20,7 +20,7 @@ from src.orchestrator.orchestrator import PipelineOrchestrator
 from src.searchers.searcher import IncorporationSearcher
 from src.clients.zyte_client import ZyteClient
 from src.utils.loader import CSVRestaurantLoader
-from src.utils.final_customer_facing_report_generator import FinalCustomerFacingReportGenerator
+from src.utils.report_generator import ReportGenerator
 
 
 @pytest.mark.asyncio
@@ -94,7 +94,7 @@ async def test_e2e_with_zyte_client_mock():
         from src.clients.openai_client import OpenAIClient
         openai_client = OpenAIClient(api_key="test-openai-key")
         loader = CSVRestaurantLoader()
-        transformation_pipeline = FinalCustomerFacingReportGenerator()
+        transformation_pipeline = ReportGenerator()
         orchestrator = PipelineOrchestrator(
             openai_client=openai_client,
             searcher=searcher,

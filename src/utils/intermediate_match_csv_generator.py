@@ -74,7 +74,6 @@ def generate_matched_restaurants_csv(matches: List[MatchResult], output_path: st
     
     logger.info(f"Saved {len(accepted_matches)} matched restaurants to {output_path}")
 
-
 def generate_unmatched_restaurants_csv(matches: List[MatchResult], output_path: str) -> None:
     """
     Generate CSV file with unmatched restaurants.
@@ -131,124 +130,9 @@ def generate_unmatched_restaurants_csv(matches: List[MatchResult], output_path: 
     
     logger.info(f"Saved {len(unmatched)} unmatched restaurants to {output_path}")
 
-
-def generate_summary_report(matches: List[MatchResult], output_path: str) -> None:
-    """
-    Generate summary report with statistics and analysis.
-    
-    Args:
-        matches: List of MatchResult objects
-        output_path: Path to save the report file
-    """
-    output_file = Path(output_path)
-    output_file.parent.mkdir(parents=True, exist_ok=True)
-    
-    # Calculate statistics
-    total_restaurants = len(matches)
-    accepted_matches = [match for match in matches if match.is_accepted and match.business]
-    unmatched = [match for match in matches if not match.is_accepted]
-    
-    match_rate = (len(accepted_matches) / total_restaurants * 100) if total_restaurants > 0 else 0
-    
-    # Confidence score distribution
-    confidence_scores = [match.confidence_score for match in accepted_matches if match.confidence_score]
-    avg_confidence = sum(confidence_scores) / len(confidence_scores) if confidence_scores else 0
-    
-    high_confidence = len([m for m in accepted_matches if m.match_type == "high"])
-    medium_confidence = len([m for m in accepted_matches if m.match_type == "medium"])
-    low_confidence = len([m for m in accepted_matches if m.match_type == "low"])
-    
-    # Location match statistics
-    postal_code_matches = len([m for m in accepted_matches if m.postal_code_match]) if accepted_matches else 0
-    city_matches = len([m for m in accepted_matches if m.city_match]) if accepted_matches else 0
-    
-    # Generate report
-    report_lines = [
-        "=" * 80,
-        "PUERTO RICO RESTAURANT MATCHER - SUMMARY REPORT",
-        "=" * 80,
-        f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
-        "",
-        "OVERALL STATISTICS",
-        "-" * 40,
-        f"Total restaurants processed: {total_restaurants:,}",
-        f"Successfully matched: {len(accepted_matches):,}",
-        f"Unmatched: {len(unmatched):,}",
-        f"Match rate: {match_rate:.1f}%",
-        "",
-        "CONFIDENCE DISTRIBUTION",
-        "-" * 40,
-        f"High confidence matches (≥85%): {high_confidence:,}",
-        f"Medium confidence matches (75-84%): {medium_confidence:,}",
-        f"Low confidence matches (70-74%): {low_confidence:,}",
-        f"Average confidence score: {avg_confidence:.1f}%",
-        "",
-        "LOCATION MATCHING",
-        "-" * 40,
-        f"Postal code matches: {postal_code_matches:,} ({postal_code_matches/len(accepted_matches)*100:.1f}% of matches)" if accepted_matches else "Postal code matches: 0 (0.0% of matches)",
-        f"City matches: {city_matches:,} ({city_matches/len(accepted_matches)*100:.1f}% of matches)" if accepted_matches else "City matches: 0 (0.0% of matches)",
-        "",
-        "SAMPLE HIGH-CONFIDENCE MATCHES",
-        "-" * 40,
-    ]
-    
-    # Add sample matches
-    high_conf_matches = [m for m in accepted_matches if m.match_type == "high"][:5]
-    for i, match in enumerate(high_conf_matches, 1):
-        report_lines.extend([
-            f"{i}. {match.restaurant.name}",
-            f"   → {match.business.legal_name}",
-            f"   Confidence: {match.confidence_score:.1f}%",
-            f"   Location: {match.restaurant.city}, {match.restaurant.postal_code}",
-            ""
-        ])
-    
-    report_lines.extend([
-        "SAMPLE UNMATCHED RESTAURANTS",
-        "-" * 40,
-    ])
-    
-    # Add sample unmatched
-    sample_unmatched = unmatched[:5]
-    for i, match in enumerate(sample_unmatched, 1):
-        report_lines.extend([
-            f"{i}. {match.restaurant.name}",
-            f"   Location: {match.restaurant.city}, {match.restaurant.postal_code}",
-            f"   Reason: {match.match_reason}",
-            ""
-        ])
-    
-    report_lines.extend([
-        "METHODOLOGY",
-        "-" * 40,
-        "• Name matching using RapidFuzz token_sort_ratio",
-        "• Postal code exact match bonus: +20 points",
-        "• City exact match bonus: +10 points",
-        "• Minimum confidence threshold: 70%",
-        "• High confidence threshold: 85%",
-        "• Medium confidence threshold: 75%",
-        "",
-        "DATA SOURCES",
-        "-" * 40,
-        "• Restaurant data: Google Maps (Puerto Rico)",
-        "• Business data: Puerto Rico incorporation documents",
-        "• API: Puerto Rico State Department of State",
-        "",
-        "=" * 80,
-        "END OF REPORT",
-        "=" * 80
-    ])
-    
-    # Write report
-    with open(output_path, 'w', encoding='utf-8') as f:
-        f.write('\n'.join(report_lines))
-    
-    logger.info(f"Generated summary report at {output_path}")
-
-
 def generate_all_outputs(matches: List[MatchResult], output_dir: str = "data/output") -> GeneratedOutputFiles:
     """
-    Generate all output files (matched CSV, unmatched CSV, summary report).
+    Generate all output files (matched CSV, unmatched CSV).
     
     Args:
         matches: List of MatchResult objects
@@ -268,22 +152,18 @@ def generate_all_outputs(matches: List[MatchResult], output_dir: str = "data/out
     # File paths
     matched_csv = output_path / f"matched_restaurants_{timestamp}.csv"
     unmatched_csv = output_path / f"unmatched_restaurants_{timestamp}.csv"
-    summary_report = output_path / f"summary_report_{timestamp}.txt"
     
     # Generate files
     generate_matched_restaurants_csv(matches, str(matched_csv))
     generate_unmatched_restaurants_csv(matches, str(unmatched_csv))
-    generate_summary_report(matches, str(summary_report))
     
     generated_files = GeneratedOutputFiles(
         matched_csv=str(matched_csv),
-        unmatched_csv=str(unmatched_csv),
-        summary_report=str(summary_report)
+        unmatched_csv=str(unmatched_csv)
     )
     
     logger.info(f"Generated all output files in {output_dir}")
     return generated_files
-
 
 def print_match_statistics(matches: List[MatchResult]) -> Dict[str, Any]:
     """

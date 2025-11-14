@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple, Union
+from typing import Optional, Dict, List, Tuple, Union, Any, Coroutine
 from datetime import datetime, timedelta
 
 from src.utils.loader import RestaurantLoader, CSVRestaurantLoader
@@ -11,7 +11,7 @@ from src.models.validation_models import ValidationResult
 from src.matchers.matcher import RestaurantMatcher
 from src.searchers.searcher import IncorporationSearcher
 from src.validators.llm_validator import LLMValidator
-from src.utils.final_customer_facing_report_generator import FinalCustomerFacingReportGenerator
+from src.utils.report_generator import ReportGenerator
 from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
@@ -25,7 +25,7 @@ class PipelineOrchestrator:
         searcher: IncorporationSearcher,
         config: MatchingConfig,
         loader: RestaurantLoader,
-        report_generator: FinalCustomerFacingReportGenerator
+        report_generator: ReportGenerator
     ):
         """
         Initialize the pipeline orchestrator.
@@ -35,7 +35,7 @@ class PipelineOrchestrator:
             searcher: IncorporationSearcher instance
             config: Matching configuration
             loader: RestaurantLoader instance
-            transformation_pipeline: FinalCustomerFacingReportGenerator instance
+            transformation_pipeline: ReportGenerator instance
         """
         self.config = config
         self.searcher = searcher
@@ -60,24 +60,29 @@ class PipelineOrchestrator:
         matcher: Shared RestaurantMatcher instance.
 
         Returns:
-        Tuple of (MatchResult, ValidationResult). Either can be None if not found/available.
+        Tuple of (MatchResult, ValidationResult). 
+        - MatchResult: Selected best match from candidates, or None if no match found
+        - ValidationResult: LLM validation result with selected best match, or None if validation failed
         """
-        # Step 1: Find best match
-        match_result = None
+        # Step 1: Find top 25 candidate matches
+        match_results = []
         try:
-            match_result = await matcher.find_best_match(restaurant)
+            match_results = await matcher.find_best_match(restaurant)
         except Exception as e:
-            logger.error(f"Error matching restaurant '{restaurant.name}': {e}",  exc_info=True)
+            logger.error(f"Error matching restaurant '{restaurant.name}': {e}", exc_info=True)
 
-        # Step 2: Validate match (if match found)
+        # Step 2: Validate all candidates and select the best one
         validation_result = None
-        if match_result and match_result.business:
+        selected_match = None
+        
+        if match_results:
             try:
-                validation_result = await self.validator.validate_match(match_result)
+                selected_match, validation_result = await self.validator.validate_best_match_from_candidates(match_results)
+                return selected_match, validation_result
             except Exception as e:
-                logger.error(f"Error validating match for '{restaurant.name}': {e}", exc_info=True)
+                logger.error(f"Error validating matches for '{restaurant.name}': {e}", exc_info=True)
 
-        return match_result, validation_result
+        return selected_match, validation_result
     
     async def run(
         self,
@@ -125,7 +130,7 @@ class PipelineOrchestrator:
 
         # Save validation results if available
         if validation_results:
-            validation_file = self._save_validation_results(validation_results, output_path)
+            validation_file = self._save_validation_results(validation_results, output_path, timestamp)
         else:
             validation_file = None
         
@@ -173,6 +178,7 @@ class PipelineOrchestrator:
             
             match_result, validation_result = result
             
+            # Add the match result if it exists
             if match_result:
                 match_results.append(match_result)
             
@@ -252,26 +258,34 @@ class PipelineOrchestrator:
     def _save_validation_results(
         self,
         validation_results: List[ValidationResult],
-        output_path: Path
+        output_path: Path,
+        timestamp: str
     ) -> Optional[str]:
-        """Save validation results to CSV files."""
+        """Save validation results to CSV files with timestamp.
+        
+        Returns the path to the validated matches file (medium and high confidence) if available.
+        """
         import pandas as pd
         
         validation_path = output_path / "validation"
         validation_path.mkdir(parents=True, exist_ok=True)
         
         validation_df = pd.DataFrame([r.__dict__ for r in validation_results])
-        validation_file_path = validation_path / "validated_matches_all.csv"
+        validation_file_path = validation_path / f"validated_matches_{timestamp}.csv"
         validation_df.to_csv(validation_file_path, index=False)
+        logger.info(f"Saved {len(validation_df)} validation results to {validation_file_path}")
         
-        # Save accepted matches
-        accepted_df = validation_df[validation_df['openai_recommendation'] == 'accept']
-        if not accepted_df.empty:
-            accepted_path = validation_path / "validated_matches_accept.csv"
-            accepted_df.to_csv(accepted_path, index=False)
-            logger.info(f"Saved {len(accepted_df)} accepted matches to {accepted_path}")
+        # Save medium and high confidence matches and return its path for final report generation
+        validated_df = validation_df[validation_df['openai_confidence'].isin(['medium', 'high'])]
+        if not validated_df.empty:
+            validated_path = validation_path / f"validated_matches_{timestamp}.csv"
+            validated_df.to_csv(validated_path, index=False)
+            logger.info(f"Saved {len(validated_df)} validated matches (medium/high confidence) to {validated_path}")
+            return str(validated_path)
         
-        return str(validation_file_path)
+        # No medium/high confidence matches - return None (final report won't be generated)
+        logger.warning("No medium or high confidence matches found - final report will not be generated")
+        return None
     
     def _run_transformation(
         self,
@@ -280,16 +294,11 @@ class PipelineOrchestrator:
         validation_file: Optional[str]
     ) -> Optional[str]:
         """Run transformation pipeline."""
-        if not self.transformation_pipeline:
-            return None
-        
-        matched_file = output_path / "matched_restaurants.csv"
-        if not matched_file.exists():
+        if not self.report_generator:
             return None
         
         final_output_path = output_path / f"final_output_{timestamp}.csv"
-        transform_result = self.transformation_pipeline.run(
-            input_csv_path=str(matched_file),
+        transform_result = self.report_generator.run(
             output_csv_path=str(final_output_path),
             validation_csv_path=validation_file
         )

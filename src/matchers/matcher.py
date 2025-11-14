@@ -67,9 +67,7 @@ class RestaurantMatcher:
         name_score: float
     ) -> Tuple[float, str, bool, bool]:
         """
-        Calculates a comprehensive match score based on name similarity and location data.
-        Name match contributes 50% of the total score, location bonuses contribute the other 50%.
-        Returns the total score, match reason, postal code match status, and city match status.
+        Calculates a match score based on name similarity and location data.
         """
         name_weighted = name_score * 0.5
         match_reason_parts = [f"Name match: {name_score:.1f}% (weighted: {name_weighted:.1f}%)"]
@@ -91,7 +89,7 @@ class RestaurantMatcher:
                 city_match = True
                 match_reason_parts.append(f"City bonus: +{MatchingConfig.CITY_MATCH_BONUS}")
 
-        final_score = min(name_weighted + bonus_total, 100.0)
+        final_score = name_weighted + bonus_total
         
         return final_score, "; ".join(match_reason_parts), postal_code_match, city_match
     
@@ -122,60 +120,51 @@ class RestaurantMatcher:
         
         return ''
 
-    async def find_best_match(self, restaurant: RestaurantRecord) -> Optional[MatchResult]:
+    async def find_best_match(self, restaurant: RestaurantRecord) -> List[MatchResult]:
         """
-        Searches for the best matching business record for a given restaurant.
-        Rate limiting handled by ZyteClient.
+        Searches for the top 25 matching business records for a given restaurant.
         """
         search_query = self._normalize_name(restaurant.name)
         candidates = await self.incorporation_searcher.search_business(
             search_query,
-            limit=MatchingConfig.MAX_CANDIDATES
+            limit=MatchingConfig.SEARCH_LIMIT
         )
         
-        best_match_result: Optional[MatchResult] = None
-        best_score = 0.0
+        all_matches: List[MatchResult] = []
         
+        # Calculate scores for all candidates
         for candidate_business in candidates:
             name_score = self._calculate_name_similarity(restaurant.name, candidate_business.legal_name)
             
             current_score, match_reason, postal_code_match, city_match = \
                 self._calculate_match_score(restaurant, candidate_business, name_score)
             
-            if current_score > best_score:
-                best_score = current_score
-                match_type = determine_match_type(best_score)
-                is_accepted = best_score >= MatchingConfig.NAME_MATCH_THRESHOLD
-                
-                best_match_result = MatchResult(
-                    restaurant=restaurant,
-                    business=candidate_business,
-                    confidence_score=best_score,
-                    match_type=match_type,
-                    is_accepted=is_accepted,
-                    name_score=name_score,
-                    postal_code_match=postal_code_match,
-                    city_match=city_match,
-                    match_reason=match_reason
-                )
-        
-        if best_match_result and best_match_result.is_accepted:
-            logger.info(
-                f"Matched '{restaurant.name}' with '{best_match_result.business.legal_name}' "
-                f"Confidence: {best_match_result.confidence_score:.1f}% ({best_match_result.match_type})"
+            match_type = determine_match_type(current_score)
+            is_accepted = current_score >= MatchingConfig.NAME_MATCH_THRESHOLD
+            
+            match_result = MatchResult(
+                restaurant=restaurant,
+                business=candidate_business,
+                confidence_score=current_score,
+                match_type=match_type,
+                is_accepted=is_accepted,
+                name_score=name_score,
+                postal_code_match=postal_code_match,
+                city_match=city_match,
+                match_reason=match_reason
             )
-            return best_match_result
+            
+            all_matches.append(match_result)
+
+        all_matches.sort(key=lambda m: m.confidence_score, reverse=True)
+        top_matches = all_matches[:25]
         
-        if best_match_result:
-            logger.info(
-                f"No accepted match for '{restaurant.name}'. Best candidate: "
-                f"'{best_match_result.business.legal_name}' with {best_match_result.confidence_score:.1f}% ({best_match_result.match_type})"
-            )
-            return best_match_result
+        if top_matches:
+            return top_matches
         else:
             logger.info(f"No candidates found for '{restaurant.name}'")
-            # Create a MatchResult for unmatched restaurants
-            return MatchResult(
+            # Return a single MatchResult indicating no matches found
+            return [MatchResult(
                 restaurant=restaurant,
                 business=None,
                 confidence_score=0.0,
@@ -185,35 +174,4 @@ class RestaurantMatcher:
                 postal_code_match=False,
                 city_match=False,
                 match_reason="No candidates found"
-            )
-
-    async def match_multiple_restaurants(self, restaurants: List[RestaurantRecord]) -> List[MatchResult]:
-        """
-        Processes a list of restaurant records concurrently and attempts to find matches for each.
-        Rate limiting handled by ZyteClient.
-        """
-        logger.info(f"Starting matching for {len(restaurants)} restaurants")
-        
-        # Create tasks for all restaurants
-        tasks = [self.find_best_match(restaurant) for restaurant in restaurants]
-        
-        # Execute all tasks concurrently with exception handling
-        results = await asyncio.gather(*tasks, return_exceptions=True)
-        
-        # Filter successful matches and log errors
-        matched_results: List[MatchResult] = []
-        error_count = 0
-        
-        for i, result in enumerate(results):
-            if isinstance(result, Exception):
-                logger.error(f"Error matching restaurant '{restaurants[i].name}': {result}")
-                error_count += 1
-            elif result is not None:
-                matched_results.append(result)
-            # Note: result can be None if there was an error, but we now always return MatchResult
-        
-        if error_count > 0:
-            logger.warning(f"Encountered {error_count} errors during matching")
-        
-        logger.info(f"Matching completed: {len(matched_results)} matches found from {len(restaurants)} restaurants")
-        return matched_results
+            )]

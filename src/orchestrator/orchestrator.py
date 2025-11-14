@@ -60,16 +60,16 @@ class PipelineOrchestrator:
         matcher: Shared RestaurantMatcher instance.
 
         Returns:
-        Tuple of (List[MatchResult], ValidationResult). 
-        - List[MatchResult]: Up to 25 candidate matches sorted by confidence score
+        Tuple of (MatchResult, ValidationResult). 
+        - MatchResult: Selected best match from candidates, or None if no match found
         - ValidationResult: LLM validation result with selected best match, or None if validation failed
         """
         # Step 1: Find top 25 candidate matches
-        match_results = []
         try:
             match_results = await matcher.find_best_match(restaurant)
         except Exception as e:
             logger.error(f"Error matching restaurant '{restaurant.name}': {e}", exc_info=True)
+            return None, None
 
         # Step 2: Validate all candidates and select the best one
         validation_result = None
@@ -78,10 +78,7 @@ class PipelineOrchestrator:
         if match_results:
             try:
                 selected_match, validation_result = await self.validator.validate_best_match_from_candidates(match_results)
-                if selected_match:
-                    return selected_match, validation_result
-                else:
-                    return None, validation_result
+                return selected_match, validation_result
             except Exception as e:
                 logger.error(f"Error validating matches for '{restaurant.name}': {e}", exc_info=True)
 
@@ -166,7 +163,7 @@ class PipelineOrchestrator:
     
     def _process_restaurant_results(
         self,
-        restaurant_results: List[Union[Tuple[List[MatchResult], Optional[ValidationResult]], Exception]],
+        restaurant_results: List[Union[Tuple[Optional[MatchResult], Optional[ValidationResult]], Exception]],
         restaurants: List[RestaurantRecord]
     ) -> Tuple[List[MatchResult], List[ValidationResult], int, float]:
         match_results = []
@@ -179,11 +176,11 @@ class PipelineOrchestrator:
                 error_count += 1
                 continue
             
-            match_results_list, validation_result = result
+            match_result, validation_result = result
             
-            # Flatten all candidate matches into the results list
-            if match_results_list:
-                match_results.extend(match_results_list)
+            # Add the match result if it exists
+            if match_result:
+                match_results.append(match_result)
             
             if validation_result:
                 validation_results.append(validation_result)

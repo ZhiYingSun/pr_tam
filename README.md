@@ -51,11 +51,15 @@ export ZYTE_API_KEY=your_key_here
 export OPENAI_API_KEY=your_key_here
 ```
 
-## Business Type Filtering
+## Business Filtering
 
-The pipeline **always applies business type filtering** to remove unsupported business types (bars, clubs, gyms, etc.) and keep only food-related businesses. This ensures DoorDash-compatible data processing.
+The pipeline **always applies business filtering** to ensure high-quality, DoorDash-compatible data:
 
-**How it works:**
+**Filtering Steps:**
+1. **Remove closed businesses** - Filters out any business where `Is closed = "Yes"`
+2. **Remove unsupported business types** - Removes bars, clubs, gyms, etc. and keeps only food-related businesses
+
+**Business Type Logic:**
 - Filters businesses based on exclusion and inclusion lists
 - Logic: Remove if business matches exclusion type AND does NOT match any inclusion type
 - Keeps mixed-type businesses (e.g., "Bar + Restaurant") if they have at least one inclusion type

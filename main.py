@@ -130,7 +130,6 @@ def main():
     
     # Run pipeline
     try:
-        # Business filtering is always applied
         result = asyncio.run(orchestrator.run(
             input_csv=str(input_path),
             output_dir=args.output,

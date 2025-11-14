@@ -263,8 +263,7 @@ class PipelineOrchestrator:
     ) -> Optional[str]:
         """Save validation results to CSV files with timestamp.
         
-        Returns the path to the accepted matches file if available,
-        otherwise returns the path to all matches file.
+        Returns the path to the validated matches file (medium and high confidence) if available.
         """
         import pandas as pd
         
@@ -276,16 +275,16 @@ class PipelineOrchestrator:
         validation_df.to_csv(validation_file_path, index=False)
         logger.info(f"Saved {len(validation_df)} validation results to {validation_file_path}")
         
-        # Save accepted matches and return its path for final report generation
-        accepted_df = validation_df[validation_df['openai_recommendation'] == 'accept']
-        if not accepted_df.empty:
-            accepted_path = validation_path / f"validated_matches_accept_{timestamp}.csv"
-            accepted_df.to_csv(accepted_path, index=False)
-            logger.info(f"Saved {len(accepted_df)} accepted matches to {accepted_path}")
-            return str(accepted_path)
+        # Save medium and high confidence matches and return its path for final report generation
+        validated_df = validation_df[validation_df['openai_confidence'].isin(['medium', 'high'])]
+        if not validated_df.empty:
+            validated_path = validation_path / f"validated_matches_{timestamp}.csv"
+            validated_df.to_csv(validated_path, index=False)
+            logger.info(f"Saved {len(validated_df)} validated matches (medium/high confidence) to {validated_path}")
+            return str(validated_path)
         
-        # No accepted matches - return None (final report won't be generated)
-        logger.warning("No accepted matches found - final report will not be generated")
+        # No medium/high confidence matches - return None (final report won't be generated)
+        logger.warning("No medium or high confidence matches found - final report will not be generated")
         return None
     
     def _run_transformation(

@@ -32,12 +32,16 @@ class ZyteClient:
             if not self.api_key:
                 raise ValueError("Zyte API key must be provided or set in ZYTE_API_KEY environment variable")
             
-            # Rate limiter: 500 requests per minute
-            self.rate_limiter = AsyncLimiter(max_rate=500, time_period=60)
+            # Separate rate limiters for GET and POST requests
+            # POST (search): 250 requests per minute
+            # GET (details): 250 requests per minute
+            # Total: 500 requests per minute to Zyte
+            self.post_rate_limiter = AsyncLimiter(max_rate=250, time_period=60)
+            self.get_rate_limiter = AsyncLimiter(max_rate=250, time_period=60)
             
             self.session = None
             self._initialized = True
-            logger.info("Initialized Zyte client with rate limiter (500/minute)")
+            logger.info("Initialized Zyte client with separate rate limiters (POST: 250/min, GET: 250/min)")
     
     async def __aenter__(self):
         """Async context manager entry - create session with connection pooling."""
@@ -80,7 +84,7 @@ class ZyteClient:
         # TODO Cache coporation search requests
         # Cache key: hash(url + normalized request_body + headers)
         
-        async with self.rate_limiter:
+        async with self.post_rate_limiter:
             payload = {
                 "url": url,
                 "httpResponseBody": True,
@@ -141,7 +145,7 @@ class ZyteClient:
         # TODO Cache: cache business details requests
         # Cache key: registration_index 
         
-        async with self.rate_limiter:
+        async with self.get_rate_limiter:
             payload = {
                 "url": url,
                 "httpResponseBody": True,

@@ -65,11 +65,11 @@ class PipelineOrchestrator:
         - ValidationResult: LLM validation result with selected best match, or None if validation failed
         """
         # Step 1: Find top 25 candidate matches
+        match_results = []
         try:
             match_results = await matcher.find_best_match(restaurant)
         except Exception as e:
             logger.error(f"Error matching restaurant '{restaurant.name}': {e}", exc_info=True)
-            return None, None
 
         # Step 2: Validate all candidates and select the best one
         validation_result = None

@@ -8,14 +8,11 @@ A high-performance Python application that matches restaurant data with Puerto R
 # Activate virtual environment
 source venv/bin/activate
 
-# Run complete pipeline (filtering is enabled by default)
+# Run complete pipeline (filtering is always applied)
 python main.py --limit 50
 
-# Process entire dataset with filtering
+# Process entire dataset
 python main.py --input data/Puerto\ Rico\ Data_\ v1109_155.csv
-
-# Skip filtering if working with pre-filtered data
-python main.py --limit 50 --skip-filter
 
 # Use custom filter lists
 python main.py \
@@ -56,7 +53,7 @@ export OPENAI_API_KEY=your_key_here
 
 ## Business Type Filtering
 
-The pipeline **automatically applies business type filtering by default** to remove unsupported business types (bars, clubs, gyms, etc.) and keep only food-related businesses. This ensures DoorDash-compatible data processing.
+The pipeline **always applies business type filtering** to remove unsupported business types (bars, clubs, gyms, etc.) and keep only food-related businesses. This ensures DoorDash-compatible data processing.
 
 **How it works:**
 - Filters businesses based on exclusion and inclusion lists
@@ -65,11 +62,8 @@ The pipeline **automatically applies business type filtering by default** to rem
 
 **Usage:**
 ```bash
-# Filtering is enabled by default - just run normally
+# Filtering is always applied automatically
 python main.py --limit 50
-
-# Skip filtering if working with pre-filtered data
-python main.py --limit 50 --skip-filter
 
 # Use custom filter lists
 python main.py \
@@ -92,11 +86,12 @@ python main.py \
 --output, -o          Output directory (default: data/output)
 --limit, -l           Number of restaurants to process (default: 50)
 --threshold, -t       Name match threshold percentage (default: 70.0)
---skip-filter         Skip business type filtering (enabled by default)
 --exclusion-list      Path to exclusion list for filtering (default: src/misc/excluded_business_types.txt)
 --inclusion-list      Path to inclusion list for filtering (default: src/misc/included_business_types.txt)
 --verbose, -v         Enable verbose logging
 ```
+
+**Note:** Business type filtering is always applied and cannot be disabled.
 
 For complete documentation, see [docs/README.md](docs/README.md).
 

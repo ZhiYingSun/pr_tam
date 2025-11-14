@@ -68,11 +68,6 @@ def main():
         help='Name match threshold percentage'
     )
     parser.add_argument(
-        '--skip-filter',
-        action='store_true',
-        help='Skip business type filtering (filtering is enabled by default)'
-    )
-    parser.add_argument(
         '--exclusion-list',
         default='src/misc/excluded_business_types.txt',
         help='Path to exclusion list for business type filtering'
@@ -135,15 +130,14 @@ def main():
     
     # Run pipeline
     try:
-        # Business filtering is enabled by default unless --skip-filter is used
-        apply_filter = not args.skip_filter
+        # Business filtering is always applied
         result = asyncio.run(orchestrator.run(
             input_csv=str(input_path),
             output_dir=args.output,
             limit=args.limit,
-            apply_business_filter=apply_filter,
-            exclusion_list=args.exclusion_list if apply_filter else None,
-            inclusion_list=args.inclusion_list if apply_filter else None
+            apply_business_filter=True,
+            exclusion_list=args.exclusion_list,
+            inclusion_list=args.inclusion_list
         ))
         if result.success:
             _log_processing_result(result)

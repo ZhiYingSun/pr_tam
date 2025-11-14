@@ -23,7 +23,6 @@ class FinalCustomerFacingReportGenerator:
     
     def run(
         self,
-        input_csv_path: str,
         output_csv_path: str,
         validation_csv_path: Optional[str] = None
     ) -> Dict:
@@ -31,9 +30,8 @@ class FinalCustomerFacingReportGenerator:
         Run the transformation pipeline.
         
         Args:
-            input_csv_path: Not used (kept for backward compatibility)
             output_csv_path: Path to save the transformed data
-            validation_csv_path: Path to accepted matches CSV (required, contains all needed data)
+            validation_csv_path: Path to accepted matches CSV
             
         Returns:
             Dictionary with transformation results

@@ -20,7 +20,7 @@ from src.orchestrator.orchestrator import PipelineOrchestrator
 from src.searchers.searcher import IncorporationSearcher
 from src.clients.zyte_client import ZyteClient
 from src.utils.loader import CSVRestaurantLoader
-from src.utils.final_customer_facing_report_generator import FinalCustomerFacingReportGenerator
+from src.utils.report_generator import FinalCustomerFacingReportGenerator
 
 
 @pytest.mark.asyncio

@@ -23,7 +23,7 @@ from src.models.models import MatchingConfig, PipelineResult
 from src.searchers.searcher import IncorporationSearcher
 from src.clients.openai_client import OpenAIClient
 from src.utils.loader import CSVRestaurantLoader
-from src.utils.final_customer_facing_report_generator import FinalCustomerFacingReportGenerator
+from src.utils.report_generator import FinalCustomerFacingReportGenerator
 
 logs_dir = project_root / "logs"
 logs_dir.mkdir(exist_ok=True)

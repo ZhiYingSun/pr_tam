@@ -11,7 +11,7 @@ from src.models.validation_models import ValidationResult
 from src.matchers.matcher import RestaurantMatcher
 from src.searchers.searcher import IncorporationSearcher
 from src.validators.llm_validator import LLMValidator
-from src.utils.final_customer_facing_report_generator import FinalCustomerFacingReportGenerator
+from src.utils.report_generator import FinalCustomerFacingReportGenerator
 from src.clients.openai_client import OpenAIClient
 
 logger = logging.getLogger(__name__)
@@ -307,17 +307,8 @@ class PipelineOrchestrator:
         if not self.report_generator:
             return None
         
-        # Find the most recent matched restaurants CSV
-        validation_files = list(output_path.glob("matched_restaurants_*.csv"))
-        if not validation_files:
-            return None
-        
-        # Use the most recent one
-        latest_validation_file = sorted(validation_files, key=lambda p: p.stat().st_mtime, reverse=True)[0]
-        
         final_output_path = output_path / f"final_output_{timestamp}.csv"
         transform_result = self.report_generator.run(
-            input_csv_path=str(latest_validation_file),
             output_csv_path=str(final_output_path),
             validation_csv_path=validation_file
         )

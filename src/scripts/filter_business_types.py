@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
 """
-Filter businesses by type for DoorDash compatibility.
+Filter businesses by type and closed status.
 
-This script filters cleaned_restaurants.csv to remove unsupported business types,
-creating a DoorDash-compatible dataset.
+This script filters restaurants to remove:
+1. Closed businesses (Is closed = "Yes")
+2. Unsupported business types (bars, clubs, etc.)
+
+This creates a DoorDash-compatible dataset.
 """
 import sys
 import logging
@@ -13,7 +16,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.utils.business_type_filter import BusinessTypeFilter
+from src.utils.business_filter import BusinessFilter
 
 logging.basicConfig(
     level=logging.INFO,
@@ -54,7 +57,7 @@ def main():
         sys.exit(1)
     
     logger.info("=" * 80)
-    logger.info("BUSINESS TYPE FILTERING")
+    logger.info("BUSINESS FILTERING")
     logger.info("=" * 80)
     logger.info(f"Input: {input_file}")
     logger.info(f"Exclusion list: {exclusion_list}")
@@ -62,12 +65,14 @@ def main():
     logger.info(f"Output: {output_file}")
     logger.info(f"Removed records: {removed_file}")
     logger.info("=" * 80)
-    logger.info("Logic: Remove if matches exclusion type AND does NOT match any inclusion type")
+    logger.info("Filtering logic:")
+    logger.info("  1. Remove closed businesses (Is closed = Yes)")
+    logger.info("  2. Remove if matches exclusion type AND does NOT match any inclusion type")
     logger.info("=" * 80)
     
     try:
         # Create filter with both exclusion and inclusion lists
-        filter_obj = BusinessTypeFilter(
+        filter_obj = BusinessFilter(
             exclusion_list_file=exclusion_list,
             inclusion_list_file=inclusion_list
         )

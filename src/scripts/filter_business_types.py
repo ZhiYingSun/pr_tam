@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Filter businesses by type and closed status for DoorDash compatibility.
+Filter businesses by type and closed status.
 
 This script filters restaurants to remove:
 1. Closed businesses (Is closed = "Yes")

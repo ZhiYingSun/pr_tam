@@ -187,7 +187,6 @@ Cleaned name:"""
         Searches for the top 25 matching business records for a given restaurant.
         Uses OpenAI to clean the name before searching if available.
         """
-        # Use OpenAI to clean the name for better search results
         search_query = await self._clean_name_with_openai(restaurant.name)
         candidates = await self.incorporation_searcher.search_business(
             search_query,

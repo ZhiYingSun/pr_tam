@@ -51,7 +51,7 @@ class PipelineOrchestrator:
         self,
         restaurant: RestaurantRecord,
         matcher: RestaurantMatcher
-    ) -> Tuple[MatchResult, Optional[ValidationResult]]:
+    ) -> Tuple[Optional[MatchResult], Optional[ValidationResult]]:
         """
         Process a single restaurant through the full match → validate pipeline.
 
@@ -70,26 +70,22 @@ class PipelineOrchestrator:
             match_results = await matcher.find_best_match(restaurant)
         except Exception as e:
             logger.error(f"Error matching restaurant '{restaurant.name}': {e}", exc_info=True)
-            return [], None
 
         # Step 2: Validate all candidates and select the best one
         validation_result = None
+        selected_match = None
         
         if match_results:
             try:
                 selected_match, validation_result = await self.validator.validate_best_match_from_candidates(match_results)
-                # Return only the selected match in the list, along with its validation result
                 if selected_match:
-                    return [selected_match], validation_result
+                    return selected_match, validation_result
                 else:
-                    # No match selected, return empty list
-                    return [], validation_result
+                    return None, validation_result
             except Exception as e:
                 logger.error(f"Error validating matches for '{restaurant.name}': {e}", exc_info=True)
-                # Return all matches even if validation failed
-                return match_results, None
 
-        return match_results, validation_result
+        return selected_match, validation_result
     
     async def run(
         self,

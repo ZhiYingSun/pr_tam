@@ -271,7 +271,7 @@ class PipelineOrchestrator:
         validation_path.mkdir(parents=True, exist_ok=True)
         
         validation_df = pd.DataFrame([r.__dict__ for r in validation_results])
-        validation_file_path = validation_path / f"validated_matches_all_{timestamp}.csv"
+        validation_file_path = validation_path / f"validated_matches_{timestamp}.csv"
         validation_df.to_csv(validation_file_path, index=False)
         logger.info(f"Saved {len(validation_df)} validation results to {validation_file_path}")
         

@@ -105,7 +105,7 @@ class MatchingConfig:
     CITY_MATCH_BONUS = 20
     
     # Search parameters
-    MAX_CANDIDATES = 5
+    MAX_CANDIDATES = 50  # Increased to support returning top 25 matches for LLM evaluation
     REQUEST_DELAY = 0.5  # seconds between API calls
     MAX_RETRIES = 3
     BACKOFF_FACTOR = 2

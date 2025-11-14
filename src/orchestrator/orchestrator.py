@@ -51,7 +51,7 @@ class PipelineOrchestrator:
         self,
         restaurant: RestaurantRecord,
         matcher: RestaurantMatcher
-    ) -> Tuple[Optional[MatchResult], Optional[ValidationResult]]:
+    ) -> Tuple[List[MatchResult], Optional[ValidationResult]]:
         """
         Process a single restaurant through the full match → validate pipeline.
 
@@ -60,24 +60,31 @@ class PipelineOrchestrator:
         matcher: Shared RestaurantMatcher instance.
 
         Returns:
-        Tuple of (MatchResult, ValidationResult). Either can be None if not found/available.
+        Tuple of (List[MatchResult], ValidationResult). 
+        - List[MatchResult]: Up to 25 candidate matches sorted by confidence score
+        - ValidationResult: LLM validation result with selected best match, or None if validation failed
         """
-        # Step 1: Find best match
-        match_result = None
+        # Step 1: Find top 25 candidate matches
+        match_results = []
         try:
-            match_result = await matcher.find_best_match(restaurant)
+            match_results = await matcher.find_best_match(restaurant)
         except Exception as e:
-            logger.error(f"Error matching restaurant '{restaurant.name}': {e}",  exc_info=True)
+            logger.error(f"Error matching restaurant '{restaurant.name}': {e}", exc_info=True)
+            return [], None
 
-        # Step 2: Validate match (if match found)
+        # Step 2: Validate all 25 candidates and let LLM select the best match
         validation_result = None
-        if match_result and match_result.business:
+        selected_match = None
+        
+        if match_results:
             try:
-                validation_result = await self.validator.validate_match(match_result)
+                selected_match, validation_result = await self.validator.validate_best_match_from_candidates(match_results)
             except Exception as e:
-                logger.error(f"Error validating match for '{restaurant.name}': {e}", exc_info=True)
+                logger.error(f"Error validating matches for '{restaurant.name}': {e}", exc_info=True)
+                # Return all matches even if validation failed
+                return match_results, None
 
-        return match_result, validation_result
+        return match_results, validation_result
     
     async def run(
         self,
@@ -158,7 +165,7 @@ class PipelineOrchestrator:
     
     def _process_restaurant_results(
         self,
-        restaurant_results: List[Union[Tuple[Optional[MatchResult], Optional[ValidationResult]], Exception]],
+        restaurant_results: List[Union[Tuple[List[MatchResult], Optional[ValidationResult]], Exception]],
         restaurants: List[RestaurantRecord]
     ) -> Tuple[List[MatchResult], List[ValidationResult], int, float]:
         match_results = []
@@ -171,10 +178,11 @@ class PipelineOrchestrator:
                 error_count += 1
                 continue
             
-            match_result, validation_result = result
+            match_results_list, validation_result = result
             
-            if match_result:
-                match_results.append(match_result)
+            # Flatten all candidate matches into the results list
+            if match_results_list:
+                match_results.extend(match_results_list)
             
             if validation_result:
                 validation_results.append(validation_result)
@@ -280,15 +288,19 @@ class PipelineOrchestrator:
         validation_file: Optional[str]
     ) -> Optional[str]:
         """Run transformation pipeline."""
-        if not self.transformation_pipeline:
+        if not self.report_generator:
             return None
         
-        matched_file = output_path / "matched_restaurants.csv"
-        if not matched_file.exists():
+        # Find the most recent matched restaurants CSV
+        matched_files = list(output_path.glob("matched_restaurants_*.csv"))
+        if not matched_files:
             return None
+        
+        # Use the most recent one
+        matched_file = sorted(matched_files, key=lambda p: p.stat().st_mtime, reverse=True)[0]
         
         final_output_path = output_path / f"final_output_{timestamp}.csv"
-        transform_result = self.transformation_pipeline.run(
+        transform_result = self.report_generator.run(
             input_csv_path=str(matched_file),
             output_csv_path=str(final_output_path),
             validation_csv_path=validation_file

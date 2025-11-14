@@ -214,14 +214,14 @@ Cleaned name:"""
                 name_score = self._calculate_name_similarity(restaurant.name, record.corpName)
                 scored_records.append((name_score, record))
         
-        # Sort by fuzzy score and take top 25
+        # Sort by fuzzy score and take top 3
         scored_records.sort(key=lambda x: x[0], reverse=True)
-        top_25_records = [record for _, record in scored_records[:25]]
+        top_3_records = [record for _, record in scored_records[:3]]
         
-        logger.info(f"Fuzzy matched {len(search_records)} records, fetching details for top {len(top_25_records)}")
+        logger.info(f"Fuzzy matched {len(search_records)} records, fetching details for top {len(top_3_records)}")
         
-        # Step 2: Only fetch detailed info for top 25 fuzzy matches
-        detailed_businesses = await self.incorporation_searcher.get_business_details_for_records(top_25_records)
+        # Step 2: Only fetch detailed info for top 3 fuzzy matches
+        detailed_businesses = await self.incorporation_searcher.get_business_details_for_records(top_3_records)
         
         # Step 3: Calculate final scores with detailed information
         all_matches: List[MatchResult] = []

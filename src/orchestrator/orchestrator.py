@@ -41,6 +41,7 @@ class PipelineOrchestrator:
         self.searcher = searcher
         self.loader = loader
         self.report_generator = report_generator
+        self.openai_client = openai_client
 
         self.validator = LLMValidator(
             openai_client=openai_client,
@@ -111,7 +112,7 @@ class PipelineOrchestrator:
         logger.info(f"Loaded {len(restaurants)} restaurants")
 
         async with self.searcher:
-            matcher = RestaurantMatcher(self.searcher)
+            matcher = RestaurantMatcher(self.searcher, self.openai_client)
 
             logger.info(f"Processing {len(restaurants)} restaurants concurrently...")
             tasks = [self.process_restaurant(restaurant, matcher) for restaurant in restaurants]

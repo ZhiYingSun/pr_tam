@@ -16,14 +16,16 @@ class RestaurantMatcher:
     Matcher for restaurant records.
     """
     
-    def __init__(self, incorporation_searcher):
+    def __init__(self, incorporation_searcher, openai_client=None):
         """
         Initialize restaurant matcher.
         
         Args:
             incorporation_searcher: IncorporationSearcher instance
+            openai_client: Optional OpenAIClient instance for name cleaning
         """
         self.incorporation_searcher = incorporation_searcher
+        self.openai_client = openai_client
 
     def _normalize_name(self, name: str) -> str:
         """
@@ -49,6 +51,68 @@ class RestaurantMatcher:
         name = re.sub(r'\s+', ' ', name).strip()
         
         return name
+
+    async def _clean_name_with_openai(self, restaurant_name: str) -> str:
+        """
+        Uses OpenAI to extract the core business name, removing unimportant words
+        that might interfere with the business registry search.
+        
+        Args:
+            restaurant_name: The restaurant name from Google Maps
+            
+        Returns:
+            Cleaned business name suitable for searching business registries
+        """
+        if not self.openai_client:
+            logger.debug("No OpenAI client available, falling back to standard normalization")
+            return self._normalize_name(restaurant_name)
+        
+        try:
+            prompt = f"""Extract the core business name from this restaurant name for searching a business registry.
+
+Restaurant name: "{restaurant_name}"
+
+Remove:
+- Location descriptors (e.g., "San Juan", "Miramar", "Plaza")
+- Generic business types (e.g., "Restaurant", "Cafe", "Bar", "Grill")
+- Descriptive words that are not part of the legal entity name
+- Articles (a, the, etc.)
+
+Keep:
+- The distinctive brand/business name
+- Any words that are likely part of the legal entity name
+
+Return ONLY the cleaned name, nothing else. If uncertain, return the original name.
+
+Examples:
+- "Pizza e Birra Miramar" → "Pizza e Birra"
+- "The Yellow Door, Coffee & Ice Cream Shop" → "Yellow Door Coffee Ice Cream Shop"
+- "Ocean Lab Brewing Co." → "Ocean Lab Brewing"
+- "Lote 23" → "Lote 23"
+
+Cleaned name:"""
+
+            response = await self.openai_client.chat_completion(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant that extracts core business names for registry searches."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.0
+            )
+            
+            if response and "content" in response:
+                cleaned_name = response["content"].strip().strip('"').strip("'")
+                if cleaned_name:
+                    logger.info(f"OpenAI cleaned name: '{restaurant_name}' → '{cleaned_name}'")
+                    return cleaned_name
+            
+            logger.warning(f"OpenAI returned empty response for '{restaurant_name}', using standard normalization")
+            return self._normalize_name(restaurant_name)
+            
+        except Exception as e:
+            logger.error(f"Error cleaning name with OpenAI: {e}. Falling back to standard normalization")
+            return self._normalize_name(restaurant_name)
 
     def _calculate_name_similarity(self, name1: str, name2: str) -> float:
         """
@@ -123,8 +187,10 @@ class RestaurantMatcher:
     async def find_best_match(self, restaurant: RestaurantRecord) -> List[MatchResult]:
         """
         Searches for the top 25 matching business records for a given restaurant.
+        Uses OpenAI to clean the name before searching if available.
         """
-        search_query = self._normalize_name(restaurant.name)
+        # Use OpenAI to clean the name for better search results
+        search_query = await self._clean_name_with_openai(restaurant.name)
         candidates = await self.incorporation_searcher.search_business(
             search_query,
             limit=MatchingConfig.SEARCH_LIMIT

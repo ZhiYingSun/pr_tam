@@ -172,69 +172,21 @@ Example JSON Output:
 
         return validation_result
 
-    async def validate_matches_batch(self, matches: List[MatchResult], batch_size: int = 10) -> List[ValidationResult]:
-        """Validates a list of matches in batches."""
-        all_validation_results: List[ValidationResult] = []
-        total_batches = (len(matches) + batch_size - 1) // batch_size
-        
-        for i in range(0, len(matches), batch_size):
-            batch_matches = matches[i:i + batch_size]
-            batch_num = i // batch_size + 1
-            logger.info(f"Processing validation batch {batch_num}/{total_batches}")
-            
-            tasks = [self.validate_match(match) for match in batch_matches]
-            batch_results = await asyncio.gather(*tasks, return_exceptions=True)
-            
-            # Count errors in this batch
-            batch_error_count = sum(1 for r in batch_results if isinstance(r, Exception))
-            batch_error_rate = batch_error_count / len(batch_matches) if batch_matches else 0.0
-            
-            # Check if batch failure rate exceeds threshold
-            if batch_error_rate > 0.5:
-                raise RuntimeError(
-                    f"Validation batch {batch_num} failed: {batch_error_count}/{len(batch_matches)} errors "
-                    f"({batch_error_rate*100:.1f}% error rate exceeds 50% threshold)"
-                )
-            
-            for j, result in enumerate(batch_results):
-                if isinstance(result, Exception):
-                    logger.error(f"Error validating match for '{batch_matches[j].restaurant.name}': {result}")
-                    # Create a default ValidationResult for errors
-                    error_validation = ValidationResult(
-                        restaurant_name=batch_matches[j].restaurant.name,
-                        business_legal_name=batch_matches[j].business.legal_name if batch_matches[j].business else "",
-                        rapidfuzz_confidence_score=batch_matches[j].confidence_score,
-                        openai_recommendation="manual_review",
-                        openai_reasoning=f"Error during OpenAI validation: {result}",
-                        final_status="manual_review"
-                    )
-                    all_validation_results.append(error_validation)
-                else:
-                    all_validation_results.append(result)
-        
-        logger.info(f"Completed batch validation: {len(all_validation_results)} results")
-        return all_validation_results
 
-    def _construct_simplified_multi_candidate_prompt(self, restaurant: RestaurantRecord, matches: List[MatchResult]) -> str:
+    def _construct_multi_candidate_prompt(self, restaurant: RestaurantRecord, matches: List[MatchResult]) -> str:
         """
-        Constructs a simplified prompt for OpenAI to evaluate 25 candidate matches and select the best one.
+        Constructs a simple prompt for OpenAI to evaluate 25 candidate matches and select the best one.
         
         Args:
             restaurant: RestaurantRecord to match
-            matches: List of MatchResult candidates (up to 25, sorted by confidence score)
+            matches: List of MatchResult candidates (up to 25, sorted by confidence score, already filtered to have business records)
             
         Returns:
             Formatted prompt string
         """
-        # Filter out matches without business records
-        valid_matches = [m for m in matches if m.business is not None]
-        
-        if not valid_matches:
-            return ""
-        
         # Build simplified candidate list - just key info
         candidates_text = []
-        for idx, match in enumerate(valid_matches):
+        for idx, match in enumerate(matches):
             business = match.business
             candidates_text.append(
                 f"#{idx + 1}. {business.legal_name} | "
@@ -272,7 +224,7 @@ Respond in JSON:
         wait=wait_exponential(multiplier=1, min=4, max=10),
         retry=retry_if_exception_type(APIStatusError)
     )
-    async def _call_openai_api_multi_candidate(self, prompt: str) -> Optional[OpenAIMultiCandidateResponse]:
+    async def _make_multi_candidate_llm_call(self, prompt: str) -> Optional[OpenAIMultiCandidateResponse]:
         """
         Makes an asynchronous call to the OpenAI API for multi-candidate validation.
         
@@ -357,33 +309,11 @@ Respond in JSON:
                 restaurant_reviews_count=restaurant.reviews_count,
                 restaurant_main_type=restaurant.main_type
             )
+
+        prompt = self._construct_multi_candidate_prompt(restaurant, valid_matches)
+        llm_response = await self._make_multi_candidate_llm_call(prompt)
         
-        # Construct simplified prompt with all candidates
-        prompt = self._construct_simplified_multi_candidate_prompt(restaurant, valid_matches)
-        if not prompt:
-            return None, ValidationResult(
-                restaurant_name=restaurant.name,
-                business_legal_name="",
-                rapidfuzz_confidence_score=0.0,
-                openai_recommendation="reject",
-                openai_reasoning="Failed to construct validation prompt.",
-                final_status="reject",
-                total_candidates_evaluated=len(valid_matches),
-                # Restaurant details
-                restaurant_address=restaurant.address,
-                restaurant_city=restaurant.city,
-                restaurant_postal_code=restaurant.postal_code,
-                restaurant_website=restaurant.website,
-                restaurant_phone=restaurant.phone,
-                restaurant_rating=restaurant.rating,
-                restaurant_reviews_count=restaurant.reviews_count,
-                restaurant_main_type=restaurant.main_type
-            )
-        
-        # Call OpenAI API
-        openai_response = await self._call_openai_api_multi_candidate(prompt)
-        
-        if not openai_response:
+        if not llm_response:
             logger.error(f"OpenAI validation failed for '{restaurant.name}'")
             # Return the top match by confidence score as fallback
             top_match = valid_matches[0]
@@ -410,7 +340,7 @@ Respond in JSON:
             )
         
         # Validate selected index
-        selected_index = openai_response.selected_candidate_index
+        selected_index = llm_response.selected_candidate_index
         
         if selected_index == -1:
             # LLM determined none of the candidates match
@@ -419,14 +349,14 @@ Respond in JSON:
                 restaurant_name=restaurant.name,
                 business_legal_name="",
                 rapidfuzz_confidence_score=0.0,
-                openai_match_score=openai_response.match_score if openai_response.match_score is not None else None,
-                openai_confidence=openai_response.confidence,
-                openai_recommendation=openai_response.recommendation,
-                openai_reasoning=openai_response.reasoning,
-                final_status=openai_response.recommendation,
+                openai_match_score=llm_response.match_score if llm_response.match_score is not None else None,
+                openai_confidence=llm_response.confidence,
+                openai_recommendation=llm_response.recommendation,
+                openai_reasoning=llm_response.reasoning,
+                final_status=llm_response.recommendation,
                 selected_match_index=-1,
                 total_candidates_evaluated=len(valid_matches),
-                openai_raw_response=openai_response.model_dump_json(),
+                openai_raw_response=llm_response.model_dump_json(),
                 # Restaurant details
                 restaurant_address=restaurant.address,
                 restaurant_city=restaurant.city,
@@ -447,20 +377,20 @@ Respond in JSON:
         
         # Get the selected match
         selected_match = valid_matches[selected_index]
-        
+
         # Create validation result with all restaurant and business details
         validation_result = ValidationResult(
             restaurant_name=restaurant.name,
             business_legal_name=selected_match.business.legal_name if selected_match.business else "",
             rapidfuzz_confidence_score=selected_match.confidence_score,
-            openai_match_score=openai_response.match_score if openai_response.match_score is not None else None,
-            openai_confidence=openai_response.confidence,
-            openai_recommendation=openai_response.recommendation,
-            openai_reasoning=openai_response.reasoning,
-            final_status=openai_response.recommendation,
+            openai_match_score=llm_response.match_score if llm_response.match_score is not None else None,
+            openai_confidence=llm_response.confidence,
+            openai_recommendation=llm_response.recommendation,
+            openai_reasoning=llm_response.reasoning,
+            final_status=llm_response.recommendation,
             selected_match_index=selected_index,
             total_candidates_evaluated=len(valid_matches),
-            openai_raw_response=openai_response.model_dump_json(),
+            openai_raw_response=llm_response.model_dump_json(),
             # Restaurant details
             restaurant_address=restaurant.address,
             restaurant_city=restaurant.city,
@@ -477,8 +407,8 @@ Respond in JSON:
         logger.info(
             f"LLM selected candidate #{selected_index + 1} for '{restaurant.name}': "
             f"'{selected_match.business.legal_name if selected_match.business else 'N/A'}' "
-            f"(recommendation: {openai_response.recommendation}, "
-            f"score: {openai_response.match_score}%)"
+            f"(recommendation: {llm_response.recommendation}, "
+            f"score: {llm_response.match_score}%)"
         )
         
         return selected_match, validation_result

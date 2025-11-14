@@ -1,7 +1,7 @@
 import logging
 import asyncio
 from pathlib import Path
-from typing import Optional, Dict, List, Tuple, Union
+from typing import Optional, Dict, List, Tuple, Union, Any, Coroutine
 from datetime import datetime, timedelta
 
 from src.utils.loader import RestaurantLoader, CSVRestaurantLoader
@@ -51,7 +51,7 @@ class PipelineOrchestrator:
         self,
         restaurant: RestaurantRecord,
         matcher: RestaurantMatcher
-    ) -> Tuple[List[MatchResult], Optional[ValidationResult]]:
+    ) -> Tuple[MatchResult, Optional[ValidationResult]]:
         """
         Process a single restaurant through the full match → validate pipeline.
 
@@ -72,7 +72,7 @@ class PipelineOrchestrator:
             logger.error(f"Error matching restaurant '{restaurant.name}': {e}", exc_info=True)
             return [], None
 
-        # Step 2: Validate all 25 candidates and let LLM select the best match
+        # Step 2: Find best match from 25 candidates
         validation_result = None
         selected_match = None
         
@@ -82,9 +82,15 @@ class PipelineOrchestrator:
             except Exception as e:
                 logger.error(f"Error validating matches for '{restaurant.name}': {e}", exc_info=True)
                 # Return all matches even if validation failed
-                return match_results, None
+                return match_results[0], None
 
-        return match_results, validation_result
+        if selected_match:
+            try:
+                validation_result = await self.validator.validate_match(selected_match)
+            except Exception as e:
+                logger.error(f"Error validating match for '{restaurant.name}': {e}", exc_info=True)
+
+        return selected_match, validation_result
     
     async def run(
         self,

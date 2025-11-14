@@ -7,7 +7,7 @@ import binascii
 from typing import Optional, Any, List, Dict
 from pydantic import BaseModel, Field
 
-
+# TODO: move into model please
 class ZyteHttpResponse(BaseModel):
     """Response model for Zyte API HTTP responses."""
     httpResponseBody: Optional[str] = Field(None, description="Base64 encoded response body")

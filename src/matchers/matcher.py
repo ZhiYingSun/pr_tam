@@ -4,8 +4,11 @@ Restaurant Matcher
 import re
 import logging
 import asyncio
+from collections import defaultdict
 from typing import List, Optional, Tuple
 from rapidfuzz import fuzz
+
+from src.models.api_models import CorporationSearchRecord
 from src.models.models import RestaurantRecord, BusinessRecord, MatchResult, MatchingConfig, determine_match_type
 
 logger = logging.getLogger(__name__)
@@ -27,90 +30,81 @@ class RestaurantMatcher:
         self.incorporation_searcher = incorporation_searcher
         self.openai_client = openai_client
 
+
     def _normalize_name(self, name: str) -> str:
-        """
-        Normalizes a business name for better matching.
-        - Converts to lowercase
-        - Removes common business suffixes (LLC, Inc, Corp, Restaurant, etc.)
-        - Removes punctuation
-        - Strips extra whitespace
-        """
         if not name or not isinstance(name, str):
             return ""
-            
-        name = name.lower()
-        
-        # Remove common suffixes
-        for suffix in MatchingConfig.COMMON_SUFFIXES:
-            name = re.sub(r'\b' + re.escape(suffix) + r'\b', '', name)
-        
-        # Remove punctuation
-        name = re.sub(MatchingConfig.PUNCTUATION_TO_REMOVE, '', name)
-        
-        # Replace multiple spaces with a single space and strip leading/trailing whitespace
-        name = re.sub(r'\s+', ' ', name).strip()
-        
-        return name
 
-    async def _clean_name_with_openai(self, restaurant_name: str) -> str:
-        """
-        Uses OpenAI to extract the core business name, removing unimportant words
-        that might interfere with the business registry search.
-        
-        Args:
-            restaurant_name: The restaurant name from Google Maps
-            
-        Returns:
-            Cleaned business name suitable for searching business registries
-        """
-        normalized_name = self._normalize_name(restaurant_name)
-        
+        normalized = name.lower()
+
+        # Remove content in parentheses
+        normalized = re.sub(r'\([^)]*\)', '', normalized)
+
+        # Remove legal suffixes (case insensitive)
+        normalized = re.sub(MatchingConfig.LEGAL_SUFFIXES, '', normalized, flags=re.IGNORECASE)
+
+        # Remove common words
+        normalized = re.sub(MatchingConfig.COMMON_WORDS, '', normalized, flags=re.IGNORECASE)
+
+        # Remove all punctuation except spaces
+        normalized = re.sub(r'[^\w\s]', '', normalized)
+
+        # Collapse multiple spaces
+        normalized = re.sub(r'\s+', ' ', normalized)
+
+        # Strip leading/trailing whitespace
+        normalized = normalized.strip()
+
+        return normalized
+
+    async def _rank_name_matches_with_llm(self, restaurant_name: str, legal_records: list[CorporationSearchRecord]) -> list[CorporationSearchRecord]:
+        legal_normalized_name_to_record = {}
+        for record in legal_records:
+            legal_normalized_name_to_record[self._normalize_name(record.corpName)] = record
+
         try:
-            prompt = f"""Extract the core business name from this restaurant name for searching a business registry.
+            prompt = f"""
+            You are a business name matching expert. Given a target business name and candidate matches with fuzzy scores, return the top 3 most likely matches.
 
-Restaurant name: "{normalized_name}"
+Target Name: {restaurant_name}
 
-Remove:
-- Location descriptors (e.g., "San Juan", "Miramar", "Plaza")
-- Generic business types (e.g., "Restaurant", "Cafe", "Bar", "Grill")
-- Descriptive words that are not part of the legal entity name
-- Articles (a, the, etc.)
+Candidates:
+{legal_normalized_name_to_record.keys()}
 
-Keep:
-- The distinctive brand/business name
-- Any words that are likely part of the legal entity name
+Consider:
+- Core business name after removing legal suffixes (Inc, LLC, Corp, S.A., etc.)
+- Abbreviations: Intl ↔ International, Assoc ↔ Associates, Bros ↔ Brothers
+- Spanish/English: Compañía ↔ Company, Servicios ↔ Services
+- Franchise/store numbers (#1234, Store 5678)
+- Ignore: punctuation, capitalization, "the", common words (de, del, of, and)
 
-Return ONLY the cleaned name, nothing else. If uncertain, return the original name.
-
-Examples:
-- "Pizza e Birra Miramar" → "Pizza e Birra"
-- "The Yellow Door, Coffee & Ice Cream Shop" → "Yellow Door Coffee Ice Cream Shop"
-- "Ocean Lab Brewing Co." → "Ocean Lab Brewing"
-- "Lote 23" → "Lote 23"
-
-Cleaned name:"""
+Return ONLY a JSON array of the top 3 candidate names:
+["candidate name 1", "candidate name 2", "candidate name 3"]
+            """
 
             response = await self.openai_client.chat_completion(
                 model="gpt-4o-mini",
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant that extracts core business names for registry searches."},
                     {"role": "user", "content": prompt}
                 ],
                 temperature=0.0
             )
             
             if response and "content" in response:
-                cleaned_name = response["content"].strip().strip('"').strip("'")
-                if cleaned_name:
-                    logger.info(f"OpenAI cleaned name: '{restaurant_name}' → '{cleaned_name}'")
-                    return cleaned_name
+                top_matches = response["content"]
+                if top_matches:
+                    logger.info(f"OpenAI gave top matches: '{restaurant_name}' → '{top_matches}'")
+                    top_record = []
+                    for legal_name in top_matches:
+                        top_record.append(legal_normalized_name_to_record[legal_name])
+                    return top_matches
             
-            logger.warning(f"OpenAI returned empty response for '{restaurant_name}', using standard normalization")
-            return self._normalize_name(restaurant_name)
+            logger.warning(f"OpenAI returned empty response for '{restaurant_name}' for ranking best matches")
+            return []
             
         except Exception as e:
-            logger.error(f"Error cleaning name with OpenAI: {e}. Falling back to standard normalization")
-            return self._normalize_name(restaurant_name)
+            logger.error(f"Error ranking legal names with OpenAI: {e}. ")
+            return []
 
     def _calculate_name_similarity(self, name1: str, name2: str) -> float:
         """
@@ -185,11 +179,10 @@ Cleaned name:"""
     async def find_best_match(self, restaurant: RestaurantRecord) -> List[MatchResult]:
         """
         Searches for the top 3 matching business records for a given restaurant.
-        Uses OpenAI to clean the name before searching.
         """
-        search_query = await self._clean_name_with_openai(restaurant.name)
+        normalized_restaurant_name = self._normalize_name(restaurant.name)
         search_records = await self.incorporation_searcher.search_business(
-            search_query,
+            normalized_restaurant_name,
             limit=MatchingConfig.SEARCH_LIMIT
         )
         
@@ -211,12 +204,16 @@ Cleaned name:"""
         scored_records = []
         for record in search_records:
             if record.corpName:
-                name_score = self._calculate_name_similarity(restaurant.name, record.corpName)
+                name_score = self._calculate_name_similarity(normalized_restaurant_name, record.corpName)
                 scored_records.append((name_score, record))
         
-        # Sort by fuzzy score and take top 3
+        # Sort by fuzzy score and take top 10 and then ask llm to give us to 3
         scored_records.sort(key=lambda x: x[0], reverse=True)
-        top_3_records = [record for _, record in scored_records[:3]]
+        top_10_records = [record for _, record in scored_records[:10]]
+        top_3_records = self._rank_name_matches_with_llm(normalized_restaurant_name, top_10_records)
+
+        if not top_3_records:
+            top_3_records = [record for _, record in top_10_records[:3]]
         
         logger.info(f"Fuzzy matched {len(search_records)} records, fetching details for top {len(top_3_records)}")
         

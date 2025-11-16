@@ -110,11 +110,8 @@ class MatchingConfig:
     BACKOFF_FACTOR = 2
     
     # Name normalization
-    COMMON_SUFFIXES = [
-        "llc", "inc", "corp", "ltd", "co", "restaurant", "bar", "cafe", "grill",
-        "eats", "kitchen", "pub", "diner", "bistro", "pizzeria", "cantina",
-        "taqueria", "bakery", "store", "market", "shop", "supercenter", "supermarket"
-    ]
+    LEGAL_SUFFIXES =  r'\b(Inc\.?|Corp\.?|Corporation|S\.A\.?|S\.E\.?|LLC|S\.R\.L\.?|SRL|S\.C\.?|S\. en C\.?|S\. en N\.C\.?|P\.S\.C\.?|C\.S\.P\.?|Ltda\.?|Cía\.?|Cia\.?|Co\.?|Company|Incorporated|Limited|Ltd\.?)\b'
+    COMMON_WORDS = r'\b(the|de|del|la|los|las|el|y|and|of)\b'
     PUNCTUATION_TO_REMOVE = r'[.,!&\'"-/]'
     
     # Output settings

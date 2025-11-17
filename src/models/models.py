@@ -89,6 +89,9 @@ class GeneratedOutputFiles(BaseModel):
     matched_csv: str
     unmatched_csv: str
 
+class RankingResponse(BaseModel):
+    ranked_legal_names: list[str]
+
 
 class MatchingConfig:
     """Configuration constants for the matching algorithm"""
@@ -110,7 +113,7 @@ class MatchingConfig:
     BACKOFF_FACTOR = 2
     
     # Name normalization
-    LEGAL_SUFFIXES =  r'\b(Inc\.?|Corp\.?|Corporation|S\.A\.?|S\.E\.?|LLC|S\.R\.L\.?|SRL|S\.C\.?|S\. en C\.?|S\. en N\.C\.?|P\.S\.C\.?|C\.S\.P\.?|Ltda\.?|Cía\.?|Cia\.?|Co\.?|Company|Incorporated|Limited|Ltd\.?)\b'
+    LEGAL_TERMS =  r'\b(Inc\.?|Corp\.?|Corporation|LLC|LLP|LLLP|PLLC|LC|Co\.?|Company|Incorporated|Limited|Ltd\.?|PLC|P\.L\.C\.?|LTD|L\.P\.?|LP|GP|PC|P\.C\.?|PA|P\.A\.?|PROF\.? CORP\.?|Professional Corporation|GmbH|AG|KG|OHG|UG|BV|N\.V\.?|NV|PTE\.? LTD\.?|SDN\.? BHD\.?|PTY\.? LTD\.?|The|A|An|SRL|S\.R\.L\.?|SA|S\.A\.?|Corporación|Ltda\.?|Limitada|Sociedad|S\.E\.?)\b'
     COMMON_WORDS = r'\b(the|de|del|la|los|las|el|y|and|of)\b'
     PUNCTUATION_TO_REMOVE = r'[.,!&\'"-/]'
     

@@ -3,9 +3,8 @@ Restaurant Matcher
 """
 import re
 import logging
-import asyncio
-from collections import defaultdict
-from typing import List, Optional, Tuple
+import json
+from typing import List, Tuple
 from rapidfuzz import fuzz
 
 from src.models.api_models import CorporationSearchRecord
@@ -41,7 +40,7 @@ class RestaurantMatcher:
         normalized = re.sub(r'\([^)]*\)', '', normalized)
 
         # Remove legal suffixes (case insensitive)
-        normalized = re.sub(MatchingConfig.LEGAL_SUFFIXES, '', normalized, flags=re.IGNORECASE)
+        normalized = re.sub(MatchingConfig.LEGAL_TERMS, '', normalized, flags=re.IGNORECASE)
 
         # Remove common words
         normalized = re.sub(MatchingConfig.COMMON_WORDS, '', normalized, flags=re.IGNORECASE)
@@ -56,6 +55,14 @@ class RestaurantMatcher:
         normalized = normalized.strip()
 
         return normalized
+
+    def _clean_json_response(self, content:str):
+        """Remove markdown code fences from JSON response"""
+        json = content.strip()
+        # Remove ```json or ``` at start and ``` at end
+        json = re.sub(r'^```(?:json)?\s*', '', json)
+        json = re.sub(r'\s*```$', '', content)
+        return json.strip()
 
     async def _rank_name_matches_with_llm(self, restaurant_name: str, legal_records: list[CorporationSearchRecord]) -> list[CorporationSearchRecord]:
         legal_normalized_name_to_record = {}
@@ -78,8 +85,8 @@ Consider:
 - Franchise/store numbers (#1234, Store 5678)
 - Ignore: punctuation, capitalization, "the", common words (de, del, of, and)
 
-Return ONLY a JSON array of the top 3 candidate names:
-["candidate name 1", "candidate name 2", "candidate name 3"]
+Return a JSON object with a "matches" key containing an array of the top 3 candidate names:
+{{"matches": ["candidate name 1", "candidate name 2", "candidate name 3"]}}
             """
 
             response = await self.openai_client.chat_completion(
@@ -91,13 +98,16 @@ Return ONLY a JSON array of the top 3 candidate names:
             )
             
             if response and "content" in response:
-                top_matches = response["content"]
-                if top_matches:
+                response_content = response["content"]
+                if response_content:
+                    top_matches = self._clean_json_response(response_content)
                     logger.info(f"OpenAI gave top matches: '{restaurant_name}' → '{top_matches}'")
+                    top_matches = json.loads(top_matches)
                     top_record = []
-                    for legal_name in top_matches:
+                    for legal_name in top_matches["matches"]:
                         top_record.append(legal_normalized_name_to_record[legal_name])
-                    return top_matches
+                    logger.info(f"top records: {top_record}'")
+                    return top_record
             
             logger.warning(f"OpenAI returned empty response for '{restaurant_name}' for ranking best matches")
             return []
@@ -210,10 +220,10 @@ Return ONLY a JSON array of the top 3 candidate names:
         # Sort by fuzzy score and take top 10 and then ask llm to give us to 3
         scored_records.sort(key=lambda x: x[0], reverse=True)
         top_10_records = [record for _, record in scored_records[:10]]
-        top_3_records = self._rank_name_matches_with_llm(normalized_restaurant_name, top_10_records)
+        top_3_records = await self._rank_name_matches_with_llm(normalized_restaurant_name, top_10_records)
 
         if not top_3_records:
-            top_3_records = [record for _, record in top_10_records[:3]]
+            top_3_records = [record for record in top_10_records[:3]]
         
         logger.info(f"Fuzzy matched {len(search_records)} records, fetching details for top {len(top_3_records)}")
         

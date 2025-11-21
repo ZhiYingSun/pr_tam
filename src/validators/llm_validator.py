@@ -13,7 +13,7 @@ from src.models.validation_models import (
     OpenAIValidationResponse,
     ValidationResult
 )
-from src.clients.openai_client import OpenAIClient
+from src.clients.client_protocols import OpenAIClientProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class LLMValidator:
     """
     def __init__(
         self,
-        openai_client: OpenAIClient,
+        openai_client: OpenAIClientProtocol,
         model: str = "gpt-4o-mini",
         temperature: float = 0.2
     ):

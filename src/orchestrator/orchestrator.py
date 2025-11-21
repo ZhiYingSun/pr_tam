@@ -13,7 +13,7 @@ from src.matchers.matcher import RestaurantMatcher
 from src.searchers.searcher import IncorporationSearcher
 from src.validators.llm_validator import LLMValidator
 from src.utils.report_generator import ReportGenerator
-from src.clients.openai_client import OpenAIClient
+from src.clients.client_protocols import OpenAIClientProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class PipelineOrchestrator:
     
     def __init__(
         self,
-        openai_client: OpenAIClient,
+        openai_client: OpenAIClientProtocol,
         searcher: IncorporationSearcher,
         config: MatchingConfig,
         loader: RestaurantLoader,

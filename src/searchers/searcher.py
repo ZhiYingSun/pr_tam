@@ -15,6 +15,7 @@ from src.models.api_models import (
     CorporationSearchRecord,
 )
 from src.clients.zyte_client import ZyteClient
+from src.clients.client_protocols import ZyteClientProtocol
 from pydantic import ValidationError
 
 logger = logging.getLogger(__name__)
@@ -23,9 +24,17 @@ logger = logging.getLogger(__name__)
 class IncorporationSearcher:
     BASE_URL = "https://rceapi.estado.pr.gov/api"
 
-    def __init__(self, zyte_api_key: str):
+    def __init__(self, zyte_api_key: str = "test_key", zyte_client: Optional[ZyteClientProtocol] = None):
+        """
+        Initialize IncorporationSearcher with dependency injection support.
+        
+        Args:
+            zyte_api_key: Zyte API key (used only if zyte_client is not provided)
+            zyte_client: Optional Zyte client implementation. If not provided,
+                        ZyteClient will be created using zyte_api_key.
+        """
         self.zyte_api_key = zyte_api_key
-        self.zyte_client = ZyteClient(zyte_api_key)
+        self.zyte_client = zyte_client if zyte_client is not None else ZyteClient(zyte_api_key)
         self.search_url = f"{self.BASE_URL}/corporation/search"
     
     def get_detail_url(self, registration_index: str) -> str:

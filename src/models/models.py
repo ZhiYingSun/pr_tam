@@ -107,7 +107,7 @@ class MatchingConfig:
     CITY_MATCH_BONUS = 20
     
     # Search parameters
-    SEARCH_LIMIT = 250
+    SEARCH_LIMIT = 500
     REQUEST_DELAY = 0.5  # seconds between API calls
     MAX_RETRIES = 3
     BACKOFF_FACTOR = 2

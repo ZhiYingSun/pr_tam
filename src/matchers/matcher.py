@@ -9,6 +9,7 @@ from rapidfuzz import fuzz
 
 from src.models.api_models import CorporationSearchRecord
 from src.models.models import RestaurantRecord, BusinessRecord, MatchResult, MatchingConfig, determine_match_type
+from src.clients.client_protocols import OpenAIClientProtocol
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +19,7 @@ class RestaurantMatcher:
     Matcher for restaurant records.
     """
     
-    def __init__(self, incorporation_searcher, openai_client):
+    def __init__(self, incorporation_searcher, openai_client: OpenAIClientProtocol):
         """
         Initialize restaurant matcher.
         
